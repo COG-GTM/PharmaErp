@@ -10,17 +10,19 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
-import java.text.CollationElementIterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  *
  * @author tarang
  */
 public class UserValidation implements Validation<User>{
-    private enum TypeError{NULL_VALUE,ONLY_NUMBER,INVALID_CHARACTER,NO_ERROR,CONTAINS_SPACE, LENGTH_ERROR};
+    private static final Logger LOGGER = Logger.getLogger(UserValidation.class.getName());
+
+    public enum TypeError{NULL_VALUE,ONLY_NUMBER,INVALID_CHARACTER,NO_ERROR,CONTAINS_SPACE, LENGTH_ERROR};
     private enum Present{PRESENT,NOT_PRESENT,DATA_ERROR};
-    private enum PassWordTypeError{NULL_VALUE,INVALID,CONTAINS_SPACE,VALID,LENGTH_ERROR};
+    public enum PassWordTypeError{NULL_VALUE,INVALID,CONTAINS_SPACE,VALID,LENGTH_ERROR};
     private Data<User> _data_user;
     private Session _session;
     public UserValidation(Data<User> _data_user,Session _session) {
@@ -29,14 +31,14 @@ public class UserValidation implements Validation<User>{
     }
 
     private void trimData(User _data){
-        _data.username = _data.username.trim();
-        _data.password = _data.password.trim();
+        _data.setUsername(_data.getUsername().trim());
+        _data.setPassword(_data.getPassword().trim());
     }
 
     public TypeError usernameValidation(User _data){
         trimData(_data);
 
-        String _username = _data.username;
+        String _username = _data.getUsername();
         if(_username==null){
             return TypeError.NULL_VALUE;
         }
@@ -54,11 +56,11 @@ public class UserValidation implements Validation<User>{
     public PassWordTypeError passwordValidation(User _data){
         trimData(_data);
 
-        String _password = _data.password;
+        String _password = _data.getPassword();
         if(_password==null){
             return PassWordTypeError.NULL_VALUE;
         }
-        System.out.println(_password);
+        LOGGER.fine("Password validation in progress");
         if(_password.contains(" ")){
             return PassWordTypeError.CONTAINS_SPACE;
         }
@@ -99,25 +101,22 @@ public class UserValidation implements Validation<User>{
     }
 
 
-    //Matches the complete user object with with the given parameter
+    //Matches the complete user object with the given parameter
     @Override
     public boolean isPresent(User _data) {
-        _data.username=_data.username.trim();
-        SessionFactory _factory = _data_user.getFactory();
-        String _username = _data.username;
-        String query = new StringBuilder().append("FROM User U WHERE U.username='").append(_username).append("'").toString();
-        Query<User> q = _session.createQuery(query,User.class);
-        List<User> result  = q.getResultList();
+        _data.setUsername(_data.getUsername().trim());
+        String _username = _data.getUsername();
+        Query<User> q = _session.createQuery("FROM User U WHERE U.username = :username", User.class);
+        q.setParameter("username", _username);
+        List<User> result = q.getResultList();
 
+        LOGGER.info("User lookup attempted for username: " + _username);
 
-
-        if(result.size()>0){
-            return User.areEqual(_data,result.get(0));
+        if(result.size() > 0){
+            return User.areEqual(_data, result.get(0));
         }else{
             return false;
         }
-
-
     }
 
 

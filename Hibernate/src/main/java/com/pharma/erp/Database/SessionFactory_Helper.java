@@ -1,42 +1,30 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.pharma.erp.Database;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-/**
- *
- * @author tarang
- */
+import java.util.logging.Logger;
 
+/**
+ * Helper class for creating Hibernate SessionFactory instances.
+ */
 public class SessionFactory_Helper {
-    public enum Type{MAIN,WEB};
-    public static SessionFactory getSessionFactory(Class _class,String _path_configuration,Type _type){
+    private static final Logger LOGGER = Logger.getLogger(SessionFactory_Helper.class.getName());
+
+    public enum Type{MAIN, WEB}
+
+    public static SessionFactory getSessionFactory(Class _class, String _path_configuration, Type _type){
         SessionFactory _factory;
-        if(_path_configuration!=null)
-        {
-            _factory = new Configuration()
-                        .configure(_path_configuration)
-                        .addAnnotatedClass(_class)
-                        .buildSessionFactory();
-        }else if(_type==Type.MAIN){
-            _factory = new Configuration()
-                        .configure()
-                        .addAnnotatedClass(_class)
-                        .buildSessionFactory();
-        }else{
-            _factory = new Configuration()
-                    .configure()
-                    .addAnnotatedClass(_class)
-                    .buildSessionFactory();
+        Configuration config = new Configuration();
+
+        if(_path_configuration != null){
+            config.configure(_path_configuration);
+        } else {
+            config.configure();
         }
+
+        _factory = config.addAnnotatedClass(_class).buildSessionFactory();
+        LOGGER.info("SessionFactory created for class: " + _class.getSimpleName() + ", type: " + _type);
         return _factory;
-    
     }
-    
-    
 }
