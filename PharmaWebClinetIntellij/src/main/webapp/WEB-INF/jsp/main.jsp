@@ -183,12 +183,33 @@
             })
 
 
-            //$.fn.errorFunciton();
+            // Initialize popovers but don't show them on page load
             $('#email').makepopper('The email address or username that you\'ve entered doesn\'t match any account. ','Error','error','right');
-            $('#email').showpopover();
             $('#pwd').makepopper('The password that you\'ve entered is incorrect. ','Error','error','right');
-            $('#pwd').showpopover();
-            //alert('hu');
+
+            // Only show error popovers on form submission with empty fields
+            $('#login_form').on('submit', function(e) {
+                var hasError = false;
+                if ($('#email').val().trim() === '') {
+                    $('#email').showpopover();
+                    $('#email').addClass('border border-danger');
+                    hasError = true;
+                }
+                if ($('#pwd').val().trim() === '') {
+                    $('#pwd').showpopover();
+                    $('#pwd').addClass('border border-danger');
+                    hasError = true;
+                }
+                if (hasError) {
+                    e.preventDefault();
+                }
+            });
+
+            // Hide popovers when user starts typing
+            $('#email, #pwd').on('focus', function() {
+                $(this).popover('hide');
+                $(this).removeClass('border border-danger');
+            });
 
         });
 
