@@ -1,56 +1,58 @@
 package com.pharma.erp.Session;
 
 import com.google.gson.Gson;
-import com.pharma.erp.Database.SessionFactory_Helper;
-import com.pharma.erp.StoredObject.Serialized;
 import io.jsonwebtoken.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.security.*;
-import java.util.Base64;
 import java.util.Date;
+import java.util.logging.Logger;
 
 @WebServlet(name = "token",urlPatterns = ("/token"))
 public class Token extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(Token.class.getName());
+
     protected void doProcess(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, NoSuchAlgorithmException, ClassNotFoundException {
 
         KeyPair kp = (KeyPair) getServletContext().getAttribute("Key_Pair");
-        Key pubic = kp.getPublic();
-        PrivateKey priva = kp.getPrivate();
+        PublicKey publicKey = kp.getPublic();
+        PrivateKey privateKey = kp.getPrivate();
+
+        String authenticatedUser = (String) request.getSession().getAttribute("username");
+        if (authenticatedUser == null) {
+            authenticatedUser = "anonymous";
+        }
 
         String _jwt = Jwts.builder().setSubject("user/login")
                         .setExpiration(new Date(System.currentTimeMillis()+3600*1000))
-                        .claim("username","tarangparikh")
+                        .claim("username", authenticatedUser)
                         .claim("scope","admin")
-                        .signWith(SignatureAlgorithm.RS256, priva)
+                        .signWith(SignatureAlgorithm.RS256, privateKey)
                         .compact();
-        HttpSession session = request.getSession();
         response.addCookie(new Cookie("token",_jwt));
         Gson gson = new Gson();
-        gson.toJson(_jwt);
         response.setContentType("application/json");
-
         response.getWriter().println(gson.toJson(_jwt));
+
+        // Verify token using public key (not private key)
         String _get = gson.fromJson(gson.toJson(_jwt),String.class);
-        Jws<Claims> token = Jwts.parser().setSigningKey(priva).parseClaimsJws(_get);
+        Jws<Claims> token = Jwts.parser().setSigningKey(publicKey).parseClaimsJws(_get);
 
-
-
-
+        LOGGER.info("Token generated for user: " + authenticatedUser);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             doProcess(request,response);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            LOGGER.severe("Token generation error: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An internal error occurred");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.severe("Token generation error: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An internal error occurred");
         }
     }
 
@@ -58,9 +60,11 @@ public class Token extends HttpServlet {
         try {
             doProcess(request,response);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            LOGGER.severe("Token generation error: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An internal error occurred");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.severe("Token generation error: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An internal error occurred");
         }
     }
 }

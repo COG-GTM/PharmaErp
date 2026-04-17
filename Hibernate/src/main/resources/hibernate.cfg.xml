@@ -4,8 +4,9 @@
 <hibernate-configuration>
  <session-factory>
   <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+  <!-- Database credentials: override via environment variables or system properties in production -->
   <property name="hibernate.connection.password">admin</property>
-  <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/PHARMA_ERP?userSSL=false</property>
+  <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/PHARMA_ERP?useSSL=false</property>
   <property name="hibernate.connection.username">root</property>
   <!--<property name="hibernate.default_schema">student</property>-->
   <property name="hibernate.dialect">org.hibernate.dialect.MySQL57Dialect</property>

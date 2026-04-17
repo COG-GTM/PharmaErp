@@ -8,10 +8,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.util.Date;
+import java.util.logging.Logger;
 
 
 import com.google.gson.Gson;
@@ -25,11 +25,12 @@ import org.hibernate.SessionFactory;
 
 @WebServlet(name = "login",urlPatterns = {"/login"})
 public class login extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(login.class.getName());
+
     protected void doProcess(HttpServletRequest request,HttpServletResponse response) throws IOException {
             synchronized (getServletContext()){
                 SessionFactory _user_factory = (SessionFactory) getServletContext().getAttribute("User_Factory");
                 Session _session = _user_factory.getCurrentSession();
-
 
                 try{
                     _session.beginTransaction();
@@ -38,66 +39,43 @@ public class login extends HttpServlet {
                     String _password = request.getParameter("password");
                     if(_user_name==null||_password==null){
                         request.getRequestDispatcher("/redirect").forward(request,response);
+                        return;
                     }
                     User _user = new User(_user_name,_password);
-
-
-
-
-
-
 
                     UserValidation _user_validation = new UserValidation(new Data<User>(_user_factory,User.class),_session);
                     if(_user_validation.isPresent(_user)){
                         KeyPair kp = (KeyPair) getServletContext().getAttribute("Key_Pair");
-                        Key pubic = kp.getPublic();
-                        PrivateKey priva = kp.getPrivate();
+                        PrivateKey privateKey = kp.getPrivate();
 
                         String _jwt = Jwts.builder().setSubject("user/login")
                                 .setExpiration(new Date(System.currentTimeMillis()+3600*1000))
-                                .claim("username",_user.username)
+                                .claim("username",_user.getUsername())
                                 .claim("scope","admin")
-                                .signWith(SignatureAlgorithm.RS256, priva)
+                                .signWith(SignatureAlgorithm.RS256, privateKey)
                                 .compact();
 
                         response.setContentType("application/json");
                         response.addCookie(new Cookie("token",_jwt));
                         response.getWriter().println(new Gson().toJson(_jwt));
 
+                        LOGGER.info("Successful login for user: " + _user.getUsername());
                     }else{
-                        //response.getWriter().println(getServletContext().getContextPath()+"/");
-
+                        LOGGER.warning("Failed login attempt for user: " + _user_name);
                         request.getRequestDispatcher("/redirect").forward(request,response);
-
                     }
-                    //_session.save(new User("tarangparikh","aggarwal"));*/
                     _session.flush();
-
                     _session.clear();
-
                     _session.getTransaction().commit();
-
                     _session.close();
-
-
-
-
 
                 }catch (Exception e){
+                    LOGGER.severe("Login processing error: " + e.getMessage());
                     _session.close();
-                    response.getWriter().println(e.toString());
-
-
-
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An internal error occurred");
                 }
-
-
-
             }
     }
-
-
-
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doProcess(request,response);

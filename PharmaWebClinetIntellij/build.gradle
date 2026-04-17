@@ -18,7 +18,6 @@ dependencies {
     compile group: 'io.jsonwebtoken', name: 'jjwt', version: '0.2'
 
     compile files("$System.env.JAVA_HOME" + 'jre/lib/jce.jar')
-    testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 

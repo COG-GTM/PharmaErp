@@ -11,25 +11,49 @@ public class User {
 
     @Id
     @Column(name = "username", nullable = false)
-    public String username;
+    private String username;
 
-    @Column(name = "password",nullable = false)
-    public String password;
+    @Column(name = "password", nullable = false)
+    private String password;
 
     public User(){
         username = null;
-        password=null;
+        password = null;
     }
-    public User(String username,String password) {
+
+    public User(String username, String password) {
         this.username = username;
         this.password = password;
     }
 
-    public static boolean areEqual(User _main , User _compare){
-        if(_main.username==null||_compare.username==null||_main.password==null||_compare.password==null){
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "User{username='" + username + "'}";
+    }
+
+    public static boolean areEqual(User _main, User _compare){
+        if(_main.getUsername() == null || _compare.getUsername() == null
+                || _main.getPassword() == null || _compare.getPassword() == null){
             return false;
         }else{
-            return _main.username.equals(_compare.username)&&_main.password.equals(_compare.password);
+            return _main.getUsername().equals(_compare.getUsername())
+                    && _main.getPassword().equals(_compare.getPassword());
         }
     }
 }
