@@ -98,9 +98,12 @@ Once both containers are healthy the app is available at:
     http://localhost:8080/
 
 The compose build passes `DB_HOST=db` so the in-container Hibernate config points
-at the `db` service instead of `localhost`. Override database name/credentials
-via environment variables (`MYSQL_DATABASE`, `MYSQL_ROOT_PASSWORD`) or a `.env`
-file; keep them in sync with `hibernate.cfg.xml`.
+at the `db` service instead of `localhost`. The database name and credentials are
+the local-development defaults baked into the WAR via `hibernate.cfg.xml`; to use
+different values, edit `hibernate.cfg.xml` (and the matching `db/init.sql` /
+`docker-compose.yml` settings) and rebuild the image. The MySQL port is published
+only on `127.0.0.1`, so the database is reachable from the host (for
+`./gradlew :MainApp:run`) but not from other machines.
 
 Tear everything down (and drop the database volume):
 

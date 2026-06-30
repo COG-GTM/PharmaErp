@@ -1,26 +1,29 @@
 # Brings up the PharmaErp web client together with the MySQL database it needs.
 #
-# Connection details mirror Hibernate/src/main/resources/hibernate.cfg.xml:
-#   database : PHARMA_ERP
-#   user     : root
-#   password : admin
-# Override these via a .env file or shell environment for anything beyond local
-# development (see the README "Configuration" section).
+# These are LOCAL-DEVELOPMENT defaults that match the values baked into the WAR
+# via Hibernate/src/main/resources/hibernate.cfg.xml (database PHARMA_ERP, user
+# root, password admin). They are intentionally not parameterised here: the app
+# reads its connection settings from the compiled-in hibernate.cfg.xml, so to use
+# different values you must edit that file and rebuild the image (changing only
+# these env vars would leave the app pointing at the old database/credentials).
+# Do not use these defaults outside local development.
 
 services:
   db:
     image: mysql:5.7
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-admin}"
-      MYSQL_DATABASE: "${MYSQL_DATABASE:-PHARMA_ERP}"
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: PHARMA_ERP
     ports:
-      - "3306:3306"
+      # Bound to loopback: reachable from the host (e.g. for
+      # `./gradlew :MainApp:run`) but not from other machines on the network.
+      - "127.0.0.1:3306:3306"
     volumes:
       - db_data:/var/lib/mysql
       # Creates the schema/tables on first startup of an empty data volume.
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-admin}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin"]
       interval: 10s
       timeout: 5s
       retries: 10
