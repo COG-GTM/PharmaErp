@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Deployment descriptor for the PharmaErp web client.
+
+    The servlets (redirect, login) and the ServletContextFactory listener are
+    registered via annotations (@WebServlet / @WebListener), so metadata-complete
+    is kept "false" to ensure those annotations are still scanned at deploy time.
+    This descriptor only declares the welcome file used to bootstrap the app.
+-->
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1"
+         metadata-complete="false">
+
+    <display-name>PharmaErp Web Client</display-name>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+</web-app>
