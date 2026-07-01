@@ -1,0 +1,14 @@
+.git
+.gitignore
+core
+**/build
+**/out
+.gradle
+**/.gradle
+.idea
+**/.idea
+.nb-gradle
+**/.nb-gradle
+*.pdf
+*.xlsx
+*.iml
