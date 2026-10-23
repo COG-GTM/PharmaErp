@@ -34,7 +34,7 @@ public class ManufacturerService {
     @Transactional(readOnly = true)
     public Page<ManufacturerResponse> search(ManufacturerType type, String query, Pageable pageable) {
         String q = blankToNull(query);
-        String pattern = q == null ? null : "%" + q.toLowerCase(Locale.ROOT) + "%";
+        String pattern = q == null ? null : "%" + escapeLike(q.toLowerCase(Locale.ROOT)) + "%";
         return repository.search(type, pattern, pageable).map(ManufacturerResponse::from);
     }
 
@@ -110,22 +110,34 @@ public class ManufacturerService {
     }
 
     static void apply(Manufacturer m, ManufacturerRequest r) {
-        m.setName(r.name().trim());
+        m.setName(r.name());
         m.setType(r.type());
         m.setLicenceNumber(upper(r.licenceNumber()));
-        m.setContactPerson(blankToNull(r.contactPerson()));
-        m.setAddress(blankToNull(r.address()));
-        m.setEmail(blankToNull(r.email()));
-        m.setPhone(blankToNull(r.phone()));
-        m.setCity(blankToNull(r.city()));
-        m.setDistrict(blankToNull(r.district()));
-        m.setState(blankToNull(r.state()));
+        m.setContactPerson(r.contactPerson());
+        m.setAddress(r.address());
+        m.setEmail(r.email());
+        m.setPhone(r.phone());
+        m.setCity(r.city());
+        m.setDistrict(r.district());
+        m.setState(r.state());
         m.setGstin(upper(r.gstin()));
     }
 
+    /** Escapes LIKE metacharacters with {@link ManufacturerRepository#LIKE_ESCAPE} so the term matches literally. */
+    static String escapeLike(String term) {
+        char esc = ManufacturerRepository.LIKE_ESCAPE;
+        StringBuilder sb = new StringBuilder(term.length());
+        for (char c : term.toCharArray()) {
+            if (c == esc || c == '%' || c == '_') {
+                sb.append(esc);
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
     private static String upper(String value) {
-        String v = blankToNull(value);
-        return v == null ? null : v.toUpperCase(Locale.ROOT);
+        return value == null ? null : value.toUpperCase(Locale.ROOT);
     }
 
     private static String blankToNull(String value) {

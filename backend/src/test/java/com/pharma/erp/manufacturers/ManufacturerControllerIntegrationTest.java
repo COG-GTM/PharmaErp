@@ -139,6 +139,47 @@ class ManufacturerControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void blankOptionalFieldsClearStoredValues() throws Exception {
+        int id = create(unique("Clearable"), "SUPPLIER", licence());
+        String json = "{\"name\": \"" + unique("Cleared") + "\", \"type\": \"SUPPLIER\", \"licenceNumber\": \"\","
+                + " \"email\": \"  \", \"phone\": \"\", \"gstin\": \" \", \"contactPerson\": \"\"}";
+        mockMvc.perform(put("/api/manufacturers/" + id)
+                        .with(bearer(USER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.gstin").doesNotExist())
+                .andExpect(jsonPath("$.phone").doesNotExist())
+                .andExpect(jsonPath("$.email").doesNotExist())
+                .andExpect(jsonPath("$.licenceNumber").doesNotExist());
+    }
+
+    @Test
+    void phoneWithoutEnoughDigitsIs400() throws Exception {
+        for (String phone : new String[] {"-------", "+ - - - -", "12-34", "1--2345678"}) {
+            postJson("{\"name\": \"" + unique("Phone") + "\", \"type\": \"SUPPLIER\", \"phone\": \"" + phone + "\"}")
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.phone").isArray());
+        }
+    }
+
+    @Test
+    void searchTreatsWildcardsLiterally() throws Exception {
+        String tag = UUID.randomUUID().toString().substring(0, 8);
+        create("Lit " + tag + " A_B", "SUPPLIER", null);
+        create("Lit " + tag + " ACB", "SUPPLIER", null);
+        create("Lit " + tag + " 100% Pure", "SUPPLIER", null);
+
+        mockMvc.perform(get("/api/manufacturers").param("q", tag + " A_B").with(bearer(USER)))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Lit " + tag + " A_B"));
+        mockMvc.perform(get("/api/manufacturers").param("q", "%").param("size", "100").with(bearer(USER)))
+                .andExpect(jsonPath("$.content[*].name", everyItem(org.hamcrest.Matchers.containsString("%"))));
+        mockMvc.perform(get("/api/manufacturers").param("q", tag + " 100%").with(bearer(USER)))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
     void unknownTypeIs400() throws Exception {
         postJson("{\"name\": \"" + unique("Bad type") + "\", \"type\": \"WHOLESALER\"}")
                 .andExpect(status().isBadRequest());

@@ -23,4 +23,22 @@ class ManufacturerServiceTest {
         assertThat(m.getDistrict()).isNull();
         assertThat(m.getGstin()).isEqualTo("27AAACC1450B1ZB");
     }
+
+    @Test
+    void requestTreatsBlankOptionalStringsAsAbsent() {
+        ManufacturerRequest r = new ManufacturerRequest(
+                " X ", ManufacturerType.SUPPLIER, " ", null, "\t", "  ", "", null, null, null, "   ");
+        assertThat(r.name()).isEqualTo("X");
+        assertThat(r.licenceNumber()).isNull();
+        assertThat(r.address()).isNull();
+        assertThat(r.email()).isNull();
+        assertThat(r.phone()).isNull();
+        assertThat(r.gstin()).isNull();
+    }
+
+    @Test
+    void escapeLikeQuotesWildcardsAndEscapeChar() {
+        assertThat(ManufacturerService.escapeLike("a_b%c!d")).isEqualTo("a!_b!%c!!d");
+        assertThat(ManufacturerService.escapeLike("plain")).isEqualTo("plain");
+    }
 }

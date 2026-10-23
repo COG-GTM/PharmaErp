@@ -8,14 +8,17 @@ import org.springframework.data.repository.query.Param;
 
 public interface ManufacturerRepository extends JpaRepository<Manufacturer, Integer> {
 
+    /** Escape character for {@link #search} patterns (not backslash, which MySQL also treats as a string escape). */
+    char LIKE_ESCAPE = '!';
+
     @Query("""
             SELECT m FROM Manufacturer m
             WHERE (:type IS NULL OR m.type = :type)
               AND (:q IS NULL
-                   OR LOWER(m.name) LIKE :q
-                   OR LOWER(m.licenceNumber) LIKE :q
-                   OR LOWER(m.city) LIKE :q
-                   OR LOWER(m.contactPerson) LIKE :q)
+                   OR LOWER(m.name) LIKE :q ESCAPE '!'
+                   OR LOWER(m.licenceNumber) LIKE :q ESCAPE '!'
+                   OR LOWER(m.city) LIKE :q ESCAPE '!'
+                   OR LOWER(m.contactPerson) LIKE :q ESCAPE '!')
             """)
     Page<Manufacturer> search(@Param("type") ManufacturerType type, @Param("q") String q, Pageable pageable);
 
