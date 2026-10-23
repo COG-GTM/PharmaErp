@@ -106,6 +106,11 @@ class StoreServiceTest {
     }
 
     @Test
+    void searchEscapesLikeMetacharacters() {
+        assertThat(StoreRepository.likeLiteral("100%_a!b")).isEqualTo("100!%!_a!!b");
+    }
+
+    @Test
     void listRejectsUnknownSortProperty() {
         assertThatThrownBy(() -> service.list(null, PageRequest.of(0, 10, Sort.by("password"))))
                 .isInstanceOf(InvalidReferenceException.class)

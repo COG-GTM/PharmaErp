@@ -18,9 +18,14 @@ public interface StoreRepository extends JpaRepository<Store, Integer> {
 
     @Query("""
             SELECT s FROM Store s
-            WHERE LOWER(s.code) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(s.name) LIKE LOWER(CONCAT('%', :q, '%'))
-               OR LOWER(s.address) LIKE LOWER(CONCAT('%', :q, '%'))
+            WHERE LOWER(s.code) LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '!'
+               OR LOWER(s.name) LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '!'
+               OR LOWER(s.address) LIKE LOWER(CONCAT('%', :q, '%')) ESCAPE '!'
             """)
     Page<Store> search(@Param("q") String q, Pageable pageable);
+
+    /** Escapes LIKE metacharacters so {@link #search} matches {@code text} literally. */
+    static String likeLiteral(String text) {
+        return text.replace("!", "!!").replace("%", "!%").replace("_", "!_");
+    }
 }

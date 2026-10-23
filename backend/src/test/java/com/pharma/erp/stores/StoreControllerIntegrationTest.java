@@ -134,6 +134,35 @@ class StoreControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void searchTreatsLikeWildcardsLiterally() throws Exception {
+        String tag = unique("PCT");
+        createStore(tag + "-1", "100% " + tag);
+        createStore(tag + "-2", "1000 " + tag);
+        createStore(tag + "-3", "A_B " + tag);
+        createStore(tag + "-4", "AXB " + tag);
+
+        mockMvc.perform(get("/api/stores").param("q", "100% " + tag).with(bearer(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].code").value(tag + "-1"));
+        mockMvc.perform(get("/api/stores").param("q", "a_b " + tag).with(bearer(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].code").value(tag + "-3"));
+    }
+
+    @Test
+    void paddedCodeAndGstinAreTrimmedNotRejected() throws Exception {
+        String code = unique("PAD-");
+        postStore(Map.of("code", "  " + code.toLowerCase() + " ", "name", " Padded " + code + " ",
+                        "gstin", " 27aabcp1234f1z5 "))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(code))
+                .andExpect(jsonPath("$.name").value("Padded " + code))
+                .andExpect(jsonPath("$.gstin").value("27AABCP1234F1Z5"));
+    }
+
+    @Test
     void unknownSortPropertyIsBadRequest() throws Exception {
         mockMvc.perform(get("/api/stores").param("sort", "bogus").with(bearer(ADMIN)))
                 .andExpect(status().isBadRequest())

@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 /**
- * Create/replace payload. {@code code} and {@code gstin} are case-insensitive and stored upper-case;
+ * Create/replace payload. Values are trimmed; {@code code} and {@code gstin} are case-insensitive and stored upper-case;
  * a blank {@code gstin}/{@code address} is stored as null.
  */
 public record StoreRequest(
@@ -21,8 +21,8 @@ public record StoreRequest(
         String gstin,
         @Positive Integer managerStaffId) {
 
-    static final String CODE_PATTERN = "^[A-Z0-9][A-Z0-9-]{1,19}$";
+    static final String CODE_PATTERN = "^\\s*[A-Z0-9][A-Z0-9-]{1,19}\\s*$";
 
     /** State code, PAN (5 letters, 4 digits, letter), entity number, 'Z', check character; blank allowed. */
-    static final String GSTIN_PATTERN = "^\\s*$|^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$";
+    static final String GSTIN_PATTERN = "^\\s*$|^\\s*[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]\\s*$";
 }

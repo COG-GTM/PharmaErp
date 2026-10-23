@@ -4,7 +4,10 @@ ALTER TABLE `store`
     ADD COLUMN `store_code` VARCHAR(20) NULL AFTER `store_id`,
     ADD COLUMN `gstin`      VARCHAR(15) NULL AFTER `store_location`;
 
-UPDATE `store` SET `store_code` = CONCAT('ST-', LPAD(`store_id`, 4, '0')) WHERE `store_code` IS NULL;
+-- LPAD truncates longer values, so only pad IDs below 10000.
+UPDATE `store`
+SET `store_code` = CONCAT('ST-', IF(`store_id` < 10000, LPAD(`store_id`, 4, '0'), `store_id`))
+WHERE `store_code` IS NULL;
 
 ALTER TABLE `store`
     MODIFY COLUMN `store_code` VARCHAR(20) NOT NULL,

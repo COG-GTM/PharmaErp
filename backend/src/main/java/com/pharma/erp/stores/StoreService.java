@@ -34,7 +34,7 @@ public class StoreService {
             }
         });
         Page<Store> page = StringUtils.hasText(query)
-                ? stores.search(query.trim(), pageable)
+                ? stores.search(StoreRepository.likeLiteral(query.trim()), pageable)
                 : stores.findAll(pageable);
         return page.map(StoreResponse::from);
     }
