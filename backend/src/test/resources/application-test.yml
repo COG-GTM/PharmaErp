@@ -1,0 +1,6 @@
+spring:
+  flyway:
+    out-of-order: false
+logging:
+  level:
+    org.testcontainers: INFO
