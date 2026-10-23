@@ -214,6 +214,19 @@ describe('invoices module', () => {
     renderAt('/invoices/7');
     expect(await screen.findByRole('heading', { name: /E-receipt/ })).toBeInTheDocument();
     expect(screen.queryByText('Payments')).not.toBeInTheDocument();
+    expect(await screen.findByTestId('payments-unavailable')).toBeInTheDocument();
+  });
+
+  it('does not show a truncated payment history', async () => {
+    mockApi(({ url }) => {
+      if (url === '/api/invoices/7') return { body: invoice };
+      if (url.includes('page=0'))
+        return { body: { content: [{ id: 9, receiptNumber: 'RCPT-0009', paymentAmount: 200, paymentType: 'UPI', paidAt: null }], page: 0, size: 200, totalElements: 201, totalPages: 2 } };
+      return { status: 503, body: { status: 503 } };
+    });
+    renderAt('/invoices/7');
+    expect(await screen.findByTestId('payments-unavailable')).toBeInTheDocument();
+    expect(screen.queryByText('RCPT-0009')).not.toBeInTheDocument();
   });
 
   it('shows not-found errors on the e-receipt', async () => {

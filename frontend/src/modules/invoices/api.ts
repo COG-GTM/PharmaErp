@@ -81,7 +81,7 @@ export const invoicesApi = {
   get: (id: number | string) => api.get<Invoice>(`${INVOICES_PATH}/${id}`),
   create: (body: CreateInvoiceRequest) => api.post<Invoice>(INVOICES_PATH, body),
   payments: (invoiceId: number | string) =>
-    fetchAll<Payment>(PAYMENTS_PATH, 'paidAt', { invoiceId }),
+    fetchAll<Payment>(PAYMENTS_PATH, 'paidAt', { invoiceId }, { allowPartial: false }),
   clients: () =>
     fetchAll<Option>(CLIENTS_PATH, 'name').then((all) => all.map((c): Option => ({ id: c.id, name: c.name }))),
   stores: () =>

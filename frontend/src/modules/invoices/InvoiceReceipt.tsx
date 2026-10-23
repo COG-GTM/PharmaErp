@@ -10,6 +10,7 @@ export function InvoiceReceipt() {
   const { id = '' } = useParams();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentsFailed, setPaymentsFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function InvoiceReceipt() {
     invoicesApi
       .payments(id)
       .then((p) => active && setPayments(p))
-      .catch(() => undefined);
+      .catch(() => active && setPaymentsFailed(true));
     return () => {
       active = false;
     };
@@ -130,6 +131,11 @@ export function InvoiceReceipt() {
           <strong>{formatInr(balance)}</strong>
         </dd>
       </dl>
+      {paymentsFailed && (
+        <p className="muted" data-testid="payments-unavailable">
+          Payment history could not be loaded.
+        </p>
+      )}
       {payments.length > 0 && (
         <>
           <h3>Payments</h3>
