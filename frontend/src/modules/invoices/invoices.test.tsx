@@ -179,6 +179,26 @@ describe('invoices module', () => {
     await waitFor(() => expect(calls.some((c) => c.url.startsWith('/api/payments?invoiceId=7'))).toBe(true));
   });
 
+  it('keeps saved invoice totals and flags line/header differences', async () => {
+    mockApi(({ url }) =>
+      url === '/api/invoices/7' ? { body: { ...invoice, gstAmount: 37.5, totalAmount: 487.5 } } : { body: page([]) },
+    );
+    renderAt('/invoices/7');
+    expect(await screen.findByTestId('receipt-adjustment')).toHaveTextContent(formatInr(489.99));
+    expect(digits(screen.getByTestId('summary-gst').textContent)).toBe('37.50');
+    expect(digits(screen.getByTestId('summary-total').textContent)).toBe('487.50');
+    expect(digits(screen.getByTestId('receipt-balance').textContent)).toBe('287.50');
+  });
+
+  it('keeps loaded lookup pages when a later page fails', async () => {
+    mockApi(({ url }) =>
+      url.includes('page=0')
+        ? { body: { content: [{ id: 1 }], page: 0, size: 200, totalElements: 2, totalPages: 2 } }
+        : { status: 503, body: { status: 503 } },
+    );
+    expect((await fetchAll<{ id: number }>('/api/clients', 'name')).map((c) => c.id)).toEqual([1]);
+  });
+
   it('loads every page of a lookup endpoint', async () => {
     const { calls } = mockApi(({ url }) => {
       const p = Number(new URL(url, 'http://x').searchParams.get('page'));

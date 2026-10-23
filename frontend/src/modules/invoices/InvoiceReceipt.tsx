@@ -40,9 +40,20 @@ export function InvoiceReceipt() {
   }
   if (!invoice) return <p>Loading e-receipt…</p>;
 
-  const summary = summarizeAmounts(
+  const fromLines = summarizeAmounts(
     invoice.lines.map((l) => ({ gstRate: l.gstRate, taxable: l.lineTotal - l.gstAmount, gst: l.gstAmount })),
   );
+  // Saved header totals are authoritative; per-rate rows come from the saved lines.
+  const cgst = Math.round((invoice.gstAmount * 100) / 2) / 100;
+  const summary = {
+    ...fromLines,
+    subtotal: invoice.subtotal,
+    gst: invoice.gstAmount,
+    cgst,
+    sgst: Math.round((invoice.gstAmount - cgst) * 100) / 100,
+    total: invoice.totalAmount,
+  };
+  const linesDiffer = Math.round(fromLines.total * 100) !== Math.round(invoice.totalAmount * 100);
   const balance = Math.round((invoice.totalAmount - invoice.paidAmount) * 100) / 100;
 
   return (
@@ -106,6 +117,11 @@ export function InvoiceReceipt() {
         </tbody>
       </table>
       <GstBreakdown summary={summary} />
+      {linesDiffer && (
+        <p className="muted" data-testid="receipt-adjustment">
+          Line items total {formatInr(fromLines.total)}; the invoice total of {formatInr(invoice.totalAmount)} includes adjustments.
+        </p>
+      )}
       <dl className="totals">
         <dt>Paid</dt>
         <dd data-testid="receipt-paid">{formatInr(invoice.paidAmount)}</dd>

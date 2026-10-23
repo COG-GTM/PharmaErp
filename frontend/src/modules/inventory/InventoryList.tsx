@@ -66,9 +66,9 @@ export function InventoryList() {
     setParams(next === 'all' ? {} : { filter: next }, { replace: true });
   };
 
-  // Client-side filtering is only a safety net when the full result fits on one page;
-  // across multiple pages the server-side filter is authoritative.
-  const rows = !data ? [] : data.totalPages <= 1 ? applyFilter(data.content, filter) : data.content;
+  // Client-side filtering is a safety net for a backend that ignores the filter params.
+  const rows = data ? applyFilter(data.content, filter) : [];
+  const partiallyFiltered = !!data && data.totalPages > 1 && rows.length < data.content.length;
 
   return (
     <section className="card">
@@ -106,7 +106,12 @@ export function InventoryList() {
         </p>
       )}
       {!data && !error && <p>Loading inventory…</p>}
-      {data && rows.length === 0 && <p>No items match.</p>}
+      {partiallyFiltered && (
+        <p className="muted" data-testid="partial-filter">
+          Some items on this page don&apos;t match the filter and are hidden; other pages may still have matches.
+        </p>
+      )}
+      {data && rows.length === 0 && <p>No items match on this page.</p>}
       {rows.length > 0 && (
         <table>
           <thead>
