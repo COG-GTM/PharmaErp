@@ -24,13 +24,13 @@ docker compose down -v                # stop and wipe the database and the JWT k
 |---------|-------|-----------|--------------|
 | `frontend` | nginx 1.27 + Vite build (`frontend/Dockerfile`) | `8080` → http://localhost:8080 | `GET /healthz` |
 | `backend` | Spring Boot jar on JRE 21 (`backend/Dockerfile`) | `127.0.0.1:8090` | `GET /actuator/health` |
-| `mysql` | `mysql:8.0`, volume `mysql-data` | `127.0.0.1:3306` | `mysqladmin ping` as the app user over TCP |
+| `mysql` | `mysql:8.0`, volume `mysql-data` | `127.0.0.1:3306` | `SELECT 1` as the app user over TCP |
 | `jwt-keys` | backend image, one-shot | — | exits 0 once `/keys/jwt-{private,public}.pem` exist |
 
 Start order is enforced with `depends_on` conditions: `mysql` healthy and `jwt-keys` completed → `backend` healthy →
 `frontend`. Flyway migrates the schema when the backend starts.
 
-nginx routing (`frontend/nginx.conf`): `/api/*`, `/login`, `/token`, `/actuator/*` are proxied to `http://backend:8090`;
+nginx routing (`frontend/nginx.conf`): `/api/*`, `/login`, `/token`, `/actuator/*`, `/v3/api-docs`, `/swagger-ui*` are proxied to `http://backend:8090`;
 `/assets/*` are served with immutable caching; every other path falls back to `index.html` (client-side routes such as
 `/signin`).
 

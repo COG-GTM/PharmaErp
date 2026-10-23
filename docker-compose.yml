@@ -20,9 +20,9 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      # Probe over TCP as the app user so "healthy" means the app can actually log in
-      # (the entrypoint's temporary init server only listens on the unix socket).
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u\"$$MYSQL_USER\" -p\"$$MYSQL_PASSWORD\" --silent"]
+      # Run a query over TCP as the app user so "healthy" means the backend's credentials work
+      # (mysqladmin ping succeeds even on access denied; the init-only server listens on the socket only).
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u\"$$MYSQL_USER\" -p\"$$MYSQL_PASSWORD\" \"$$MYSQL_DATABASE\" -e 'SELECT 1' > /dev/null 2>&1"]
       interval: 5s
       timeout: 5s
       retries: 30
