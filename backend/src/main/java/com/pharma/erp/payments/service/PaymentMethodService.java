@@ -7,15 +7,14 @@ import com.pharma.erp.payments.dto.PaymentMethodResponse;
 import com.pharma.erp.payments.entity.PaymentMethod;
 import com.pharma.erp.payments.repository.PaymentMethodRepository;
 import com.pharma.erp.payments.repository.PaymentRepository;
-import java.util.List;
-import org.springframework.data.domain.Sort;
+import com.pharma.erp.common.web.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentMethodService {
-
-    private static final Sort BY_NAME = Sort.by("methodName");
 
     private final PaymentMethodRepository methods;
     private final PaymentRepository payments;
@@ -26,9 +25,9 @@ public class PaymentMethodService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentMethodResponse> list(Boolean active) {
-        List<PaymentMethod> result = active == null ? methods.findAll(BY_NAME) : methods.findByActive(active, BY_NAME);
-        return result.stream().map(PaymentMethodResponse::from).toList();
+    public PageResponse<PaymentMethodResponse> list(Boolean active, Pageable pageable) {
+        Page<PaymentMethod> page = active == null ? methods.findAll(pageable) : methods.findByActive(active, pageable);
+        return PageResponse.from(page, PaymentMethodResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -54,9 +53,7 @@ public class PaymentMethodService {
             throw duplicate(name);
         }
         method.setMethodName(name);
-        if (request.active() != null) {
-            method.setActive(request.active());
-        }
+        method.setActive(request.active() == null || request.active());
         return PaymentMethodResponse.from(methods.saveAndFlush(method));
     }
 

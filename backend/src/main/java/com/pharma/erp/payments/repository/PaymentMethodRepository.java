@@ -1,8 +1,8 @@
 package com.pharma.erp.payments.repository;
 
 import com.pharma.erp.payments.entity.PaymentMethod;
-import java.util.List;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Integer> {
@@ -11,5 +11,5 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, In
 
     boolean existsByMethodNameIgnoreCaseAndIdNot(String methodName, Integer id);
 
-    List<PaymentMethod> findByActive(boolean active, Sort sort);
+    Page<PaymentMethod> findByActive(boolean active, Pageable pageable);
 }

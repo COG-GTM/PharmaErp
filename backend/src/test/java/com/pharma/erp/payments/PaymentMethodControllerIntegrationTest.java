@@ -32,17 +32,45 @@ class PaymentMethodControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void listIncludesSeededMethodsAndFiltersByActive() throws Exception {
-        mockMvc.perform(get("/api/payment-methods").with(bearer(USER)))
+        mockMvc.perform(get("/api/payment-methods").param("size", "1000").with(bearer(USER)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].methodName", hasItems("Cash", "UPI", "Cheque", "Demand Draft")));
-        mockMvc.perform(get("/api/payment-methods").param("active", "true").with(bearer(USER)))
+                .andExpect(jsonPath("$.content[*].methodName", hasItems("Cash", "UPI", "Cheque", "Demand Draft")));
+        mockMvc.perform(get("/api/payment-methods").param("active", "true").param("size", "1000").with(bearer(USER)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].methodName", hasItem("Cash")))
-                .andExpect(jsonPath("$[*].methodName", not(hasItem("Demand Draft"))));
-        mockMvc.perform(get("/api/payment-methods").param("active", "false").with(bearer(USER)))
+                .andExpect(jsonPath("$.content[*].methodName", hasItem("Cash")))
+                .andExpect(jsonPath("$.content[*].methodName", not(hasItem("Demand Draft"))));
+        mockMvc.perform(get("/api/payment-methods").param("active", "false").param("size", "1000").with(bearer(USER)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].methodName", hasItem("Demand Draft")))
-                .andExpect(jsonPath("$[*].active", not(hasItem(true))));
+                .andExpect(jsonPath("$.content[*].methodName", hasItem("Demand Draft")))
+                .andExpect(jsonPath("$.content[*].active", not(hasItem(true))));
+    }
+
+    @Test
+    void listIsPaginatedAndSortedByName() throws Exception {
+        mockMvc.perform(get("/api/payment-methods").param("size", "2").param("page", "1").with(bearer(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(org.hamcrest.Matchers.greaterThanOrEqualTo(8)));
+        mockMvc.perform(get("/api/payment-methods").param("sort", "nope").with(bearer(USER)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+    }
+
+    @Test
+    void replacingWithoutActiveReactivates() throws Exception {
+        String name = PaymentsTestData.unique("Revive");
+        int id = create(name);
+        mockMvc.perform(put("/api/payment-methods/{id}", id).with(bearer(USER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"methodName\":\"" + name + "\",\"active\":false}"))
+                .andExpect(jsonPath("$.active").value(false));
+        mockMvc.perform(put("/api/payment-methods/{id}", id).with(bearer(USER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"methodName\":\"" + name + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(true));
     }
 
     @Test
