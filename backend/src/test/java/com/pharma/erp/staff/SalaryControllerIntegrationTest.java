@@ -88,9 +88,12 @@ class SalaryControllerIntegrationTest extends StaffTestSupport {
     }
 
     @Test
-    void writesRequireAdminScope() throws Exception {
+    void payrollRequiresAdminScope() throws Exception {
         int staffId = createStaff(staffBody(unique()));
-        perform(get("/api/staff/{id}/salaries", staffId).with(nonAdmin())).andExpect(status().isOk());
+        perform(get("/api/staff/{id}/salaries", staffId).with(nonAdmin())).andExpect(status().isForbidden());
+        int salaryId = createSalary(staffId, Map.of("amount", 1));
+        perform(get("/api/staff/{id}/salaries/{sid}", staffId, salaryId).with(nonAdmin()))
+                .andExpect(status().isForbidden());
         perform(post("/api/staff/{id}/salaries", staffId).with(nonAdmin())
                         .contentType(MediaType.APPLICATION_JSON).content(json(Map.of("amount", 1))))
                 .andExpect(status().isForbidden());

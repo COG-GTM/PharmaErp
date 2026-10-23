@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** Payroll history; reads and writes are admin-only. */
 @RestController
 @RequestMapping("/api/staff/{staffId}/salaries")
 public class SalaryController {
@@ -29,11 +30,13 @@ public class SalaryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('SCOPE_admin')")
     public PageResponse<SalaryResponse> list(@PathVariable Integer staffId, Pageable pageable) {
         return service.list(staffId, pageable);
     }
 
     @GetMapping("/{salaryId}")
+    @PreAuthorize("hasAuthority('SCOPE_admin')")
     public SalaryResponse get(@PathVariable Integer staffId, @PathVariable Integer salaryId) {
         return service.get(staffId, salaryId);
     }

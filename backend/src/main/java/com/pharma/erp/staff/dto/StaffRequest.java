@@ -49,6 +49,17 @@ public record StaffRequest(
     public static final String USERNAME_MESSAGE =
             "must be 8-12 letters, digits or underscores and not only digits";
 
+    /** Trim before validation, as the legacy {@code UserValidation} does. */
+    public StaffRequest {
+        username = trim(username);
+        email = trim(email);
+        mobileNumber = trim(mobileNumber);
+    }
+
+    private static String trim(String value) {
+        return value == null ? null : value.trim();
+    }
+
     @JsonIgnore
     @AssertTrue(message = "joinDate must be after dateOfBirth")
     public boolean isJoinDateAfterBirth() {
