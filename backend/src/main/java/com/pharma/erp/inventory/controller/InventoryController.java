@@ -66,15 +66,17 @@ public class InventoryController {
     @GetMapping("/expiring")
     public PageResponse<InventoryItemResponse> expiring(
             @RequestParam(defaultValue = "30") @Min(0) @Max(3650) int days,
+            @RequestParam(required = false) String q,
             @PageableDefault(size = 20) Pageable pageable) {
-        return service.expiring(days, checkedSort(pageable));
+        return service.expiring(days, q, checkedSort(pageable));
     }
 
     @GetMapping("/low-stock")
     public PageResponse<InventoryItemResponse> lowStock(
             @RequestParam(required = false) @Min(0) Integer threshold,
+            @RequestParam(required = false) String q,
             @PageableDefault(size = 20) Pageable pageable) {
-        return service.lowStockItems(threshold, checkedSort(pageable));
+        return service.lowStockItems(threshold, q, checkedSort(pageable));
     }
 
     @GetMapping("/statuses")

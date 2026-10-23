@@ -181,20 +181,87 @@ describe('inventory module', () => {
     expect(calls.filter((c) => c.method !== 'GET')).toHaveLength(0);
   });
 
-  it('edits an existing item', async () => {
+  it('edits an item without touching its quantity and keeps fields the form does not show', async () => {
+    const stored: InventoryItem = {
+      ...low,
+      reorderLevel: 50,
+      status: 'ARRIVED',
+      employeeId: 7,
+      clientId: 9,
+      assignDate: '2026-01-02',
+      deliveryDate: '2026-01-05',
+      totalAmount: 1200,
+      advanceAmount: 200,
+    };
     const { calls } = mockApi(({ method, url }) => {
-      if (method === 'PUT') return { body: low };
+      if (method === 'PUT') return { body: stored };
+      if (url === '/api/inventory/3') return { body: stored };
+      return { body: page([]) };
+    });
+    renderAt('/inventory/3/edit');
+
+    const name = await screen.findByDisplayValue('Insulin pen');
+    expect(screen.queryByLabelText('Quantity')).not.toBeInTheDocument();
+    expect(screen.getByTestId('quantity-on-hand')).toHaveTextContent('4');
+    await userEvent.clear(name);
+    await userEvent.type(name, 'Insulin pen 100IU');
+    await userEvent.click(screen.getByRole('button', { name: 'Save item' }));
+
+    await screen.findByRole('heading', { name: 'Inventory' });
+    const put = calls.find((c) => c.method === 'PUT');
+    expect(put).toMatchObject({
+      url: '/api/inventory/3',
+      body: {
+        name: 'Insulin pen 100IU',
+        storeId: 2,
+        reorderLevel: 50,
+        status: 'ARRIVED',
+        employeeId: 7,
+        clientId: 9,
+        assignDate: '2026-01-02',
+        deliveryDate: '2026-01-05',
+        totalAmount: 1200,
+        advanceAmount: 200,
+      },
+    });
+    expect(put?.body).not.toHaveProperty('quantity');
+  });
+
+  it('records a stock adjustment instead of editing quantity', async () => {
+    const { calls } = mockApi(({ method, url }) => {
+      if (method === 'POST' && url === '/api/inventory/3/adjust') return { body: { item: { ...low, quantity: 50 } } };
       if (url === '/api/inventory/3') return { body: low };
       return { body: page([]) };
     });
     renderAt('/inventory/3/edit');
 
-    const qty = await screen.findByDisplayValue('4');
-    await userEvent.clear(qty);
-    await userEvent.type(qty, '50');
-    await userEvent.click(screen.getByRole('button', { name: 'Save item' }));
+    await screen.findByDisplayValue('Insulin pen');
+    await userEvent.click(screen.getByRole('button', { name: 'Record adjustment' }));
+    expect(screen.getByText(/non-zero whole number/)).toBeInTheDocument();
 
-    await screen.findByRole('heading', { name: 'Inventory' });
-    expect(calls.find((c) => c.method === 'PUT')).toMatchObject({ url: '/api/inventory/3', body: { quantity: 50, storeId: 2 } });
+    await userEvent.type(screen.getByLabelText('Quantity change'), '46');
+    await userEvent.selectOptions(screen.getByLabelText('Reason'), 'RECEIPT');
+    await userEvent.type(screen.getByLabelText('Note'), 'Weekly delivery');
+    await userEvent.click(screen.getByRole('button', { name: 'Record adjustment' }));
+
+    await waitFor(() => expect(screen.getByTestId('quantity-on-hand')).toHaveTextContent('50'));
+    expect(calls.find((c) => c.method === 'POST')).toMatchObject({
+      url: '/api/inventory/3/adjust',
+      body: { quantityChange: 46, reason: 'RECEIPT', note: 'Weekly delivery' },
+    });
+    expect(calls.filter((c) => c.method === 'PUT')).toHaveLength(0);
+  });
+
+  it('searches within the expiring-soon and low-stock views', async () => {
+    const { calls } = mockApi(() => ({ body: page([low]) }));
+    renderAt('/inventory?filter=low-stock');
+    await screen.findByTestId('item-3');
+
+    await userEvent.type(screen.getByLabelText('Search inventory'), 'insulin');
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await waitFor(() => expect(calls.at(-1)?.url).toMatch(/^\/api\/inventory\/low-stock\?q=insulin&/));
+
+    await userEvent.click(screen.getByRole('button', { name: /Expiring soon/ }));
+    await waitFor(() => expect(calls.at(-1)?.url).toMatch(/^\/api\/inventory\/expiring\?days=30&q=insulin&/));
   });
 });
