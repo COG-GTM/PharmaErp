@@ -34,6 +34,21 @@ class DeletedAccountTokenIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tokenOfDeletedAccountStaysRevokedWhenTheUsernameIsReRegistered() throws Exception {
+        String username = "reuse_" + UUID.randomUUID().toString().substring(0, 8);
+        jdbc.update("INSERT INTO `user` (`username`, `password`) VALUES (?, ?)", username, "Secret#123");
+        String oldToken = tokenFor(username);
+        jdbc.update("DELETE FROM `user` WHERE `username` = ?", username);
+        Thread.sleep(1_100); // JWT iat and created_at have one-second resolution
+        jdbc.update("INSERT INTO `user` (`username`, `password`) VALUES (?, ?)", username.toUpperCase(), "Other#456");
+
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + oldToken))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + tokenFor(username)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void tokenForUnknownAccountIsRejected() throws Exception {
         mockMvc.perform(get("/api/auth/me").with(bearer("never_existed_" + UUID.randomUUID())))
                 .andExpect(status().isUnauthorized());

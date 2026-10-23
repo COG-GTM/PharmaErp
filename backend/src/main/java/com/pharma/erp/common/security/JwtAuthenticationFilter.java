@@ -8,6 +8,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
@@ -50,7 +51,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (username == null) {
                     username = claims.getSubject();
                 }
-                if (!accountChecker.isActive(username)) {
+                Instant issuedAt = claims.getIssuedAt() == null ? null : claims.getIssuedAt().toInstant();
+                if (!accountChecker.isActive(username, issuedAt)) {
                     logger.debug("Ignoring JWT of inactive account");
                     chain.doFilter(request, response);
                     return;

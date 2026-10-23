@@ -66,7 +66,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void ignoresTokenRejectedByAccountChecker() throws Exception {
-        JwtAuthenticationFilter checked = new JwtAuthenticationFilter(jwtService, username -> !"gone".equals(username));
+        JwtAuthenticationFilter checked = new JwtAuthenticationFilter(jwtService, (username, issuedAt) -> !"gone".equals(username));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer " + jwtService.issueToken("gone", "admin"));
 
