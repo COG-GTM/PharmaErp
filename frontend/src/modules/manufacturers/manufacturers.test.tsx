@@ -10,6 +10,9 @@ import { mockApi, page } from './testing';
 const acme: Manufacturer = {
   id: 7,
   name: 'Sun Labs',
+  type: 'MANUFACTURER',
+  licenceNumber: 'MH-DL-2024/001',
+  contactPerson: 'R. Mehta',
   address: '1 Main St',
   phone: '9876543210',
   email: 'acme@example.com',
@@ -65,7 +68,7 @@ describe('manufacturers module', () => {
     expect(await screen.findByRole('heading', { name: 'Manufacturers' })).toBeInTheDocument();
     const post = calls.find((c) => c.method === 'POST');
     expect(post?.url).toBe('/api/manufacturers');
-    expect(post?.body).toMatchObject({ name: 'Sun Labs', gstin: '27AAPFU0939F1ZV', email: null });
+    expect(post?.body).toMatchObject({ name: 'Sun Labs', type: 'MANUFACTURER', gstin: '27AAPFU0939F1ZV', email: null });
   });
 
   it('validates required fields and formats before calling the API', async () => {

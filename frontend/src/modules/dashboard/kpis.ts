@@ -9,7 +9,7 @@ export interface KpiDefinition {
 }
 
 export const KPIS: KpiDefinition[] = [
-  { id: 'inventory', label: 'Inventory items', endpoints: ['/api/inventory-items', '/api/inventory'], description: 'Stock lines on hand' },
+  { id: 'inventory', label: 'Inventory items', endpoints: ['/api/inventory'], description: 'Stock lines on hand' },
   { id: 'invoices', label: 'Invoices', endpoints: ['/api/invoices'], description: 'Sales invoices raised' },
   { id: 'clients', label: 'Clients', endpoints: ['/api/clients'], description: 'Registered customers' },
   { id: 'manufacturers', label: 'Manufacturers', endpoints: ['/api/manufacturers'], description: 'Supplying manufacturers' },

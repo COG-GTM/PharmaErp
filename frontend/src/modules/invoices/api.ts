@@ -8,7 +8,7 @@ export const PAYMENTS_PATH = '/api/payments';
 /** Lookups for the create screen (T05 / T04 / T07). */
 export const CLIENTS_PATH = '/api/clients';
 export const STORES_PATH = '/api/stores';
-export const INVENTORY_PATH = '/api/inventory-items';
+export const INVENTORY_PATH = '/api/inventory';
 
 export interface InvoiceLine {
   id?: number;
@@ -16,26 +16,39 @@ export interface InvoiceLine {
   description: string;
   quantity: number;
   unitPrice: number;
+  taxableAmount: number;
   /** Percent. */
   gstRate: number;
+  cgstRate: number;
+  cgstAmount: number;
+  sgstRate: number;
+  sgstAmount: number;
   gstAmount: number;
   lineTotal: number;
 }
 
-export interface Invoice {
+/** Row of `GET /api/invoices` (backend `InvoiceSummaryResponse`). */
+export interface InvoiceSummary {
   id: number;
   invoiceNumber: string;
   clientId: number | null;
-  clientName?: string | null;
   storeId: number | null;
-  storeName?: string | null;
   status: string;
   invoiceDate: string;
-  invoiceDescription: string | null;
   subtotal: number;
   gstAmount: number;
   totalAmount: number;
   paidAmount: number;
+  balanceDue: number;
+}
+
+/** `GET /api/invoices/{id}` (backend `InvoiceResponse`). */
+export interface Invoice extends InvoiceSummary {
+  prescriptionId: number | null;
+  description: string | null;
+  cgstAmount: number;
+  sgstAmount: number;
+  createdAt?: string;
   lines: InvoiceLine[];
 }
 
@@ -51,15 +64,20 @@ export interface CreateInvoiceRequest {
   clientId: number | null;
   storeId: number | null;
   invoiceDate: string;
-  invoiceDescription: string | null;
+  description: string | null;
   lines: InvoiceLineRequest[];
 }
 
+/** Backend `PaymentResponse`. */
 export interface Payment {
   id: number;
-  receiptNumber: string | null;
-  paymentAmount: number;
+  invoiceId: number;
+  clientId: number | null;
+  paymentMethodId: number;
   paymentType: string | null;
+  amount: number;
+  reference: string | null;
+  receiptNumber: string | null;
   paidAt: string;
 }
 
@@ -77,7 +95,7 @@ export interface ItemOption extends Option {
 
 export const invoicesApi = {
   list: ({ page = 0, size = 20 }: { page?: number; size?: number } = {}) =>
-    api.get<PageResponse<Invoice>>(INVOICES_PATH, { query: { page, size, sort: 'invoiceDate,desc' } }),
+    api.get<PageResponse<InvoiceSummary>>(INVOICES_PATH, { query: { page, size, sort: 'invoiceDate,desc' } }),
   get: (id: number | string) => api.get<Invoice>(`${INVOICES_PATH}/${id}`),
   create: (body: CreateInvoiceRequest) => api.post<Invoice>(INVOICES_PATH, body),
   payments: (invoiceId: number | string) =>

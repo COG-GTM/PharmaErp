@@ -8,6 +8,8 @@ import java.time.LocalDate;
 /**
  * An inventory batch. {@code status} is the logistics status (IN_TRANSIT, ARRIVED, ...); {@code stockStatus}
  * is derived from quantity, reorder level and expiry; {@code daysToExpiry} is negative once expired.
+ * {@code reorderLevel} is the effective level; {@code reorderLevelOverride} is the stored per-batch value (null when
+ * the batch follows the configured default).
  */
 public record InventoryItemResponse(
         Integer id,
@@ -18,6 +20,7 @@ public record InventoryItemResponse(
         Long daysToExpiry,
         int quantity,
         int reorderLevel,
+        Integer reorderLevelOverride,
         BigDecimal unitPrice,
         BigDecimal stockValue,
         BigDecimal gstRate,

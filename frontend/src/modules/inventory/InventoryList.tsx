@@ -140,8 +140,8 @@ export function InventoryList() {
                 <td className="num">{item.quantity}</td>
                 <td className="num">{item.unitPrice?.toFixed(2)}</td>
                 <td className="num">{item.gstRate}</td>
-                <td>{nameOf(manufacturers, item.manufacturerId, item.manufacturerName)}</td>
-                <td>{nameOf(stores, item.storeId, item.storeName)}</td>
+                <td>{nameOf(manufacturers, item.manufacturerId)}</td>
+                <td>{nameOf(stores, item.storeId)}</td>
                 <td>
                   {stockBadges(item).map((b) => (
                     <span key={b.label} className={`badge badge-${b.tone}`}>

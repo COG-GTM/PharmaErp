@@ -245,6 +245,13 @@ class InventoryIntegrationTest extends AbstractIntegrationTest {
             assertThat(n.get("quantity").asInt()).isPositive();
         });
 
+        String searched = uniqueBarcode();
+        int match = createItem(searched, 5, today.plusDays(7));
+        mockMvc.perform(get("/api/inventory/expiring").param("days", "30").param("q", searched).with(bearer(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(match));
+
         mockMvc.perform(get("/api/inventory/expiring").param("days", "-1").with(bearer(USER)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
@@ -266,6 +273,18 @@ class InventoryIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content[*].id", hasItem(empty)))
                 .andExpect(jsonPath("$.content[*].id", not(hasItem(plenty))))
                 .andExpect(jsonPath("$.content[*].id", not(hasItem(expiredLow))));
+
+        mockMvc.perform(get("/api/inventory/" + belowOwnLevel).with(bearer(USER)))
+                .andExpect(jsonPath("$.reorderLevel").value(20))
+                .andExpect(jsonPath("$.reorderLevelOverride").value(20));
+        mockMvc.perform(get("/api/inventory/" + empty).with(bearer(USER)))
+                .andExpect(jsonPath("$.reorderLevel").isNumber())
+                .andExpect(jsonPath("$.reorderLevelOverride").doesNotExist());
+
+        mockMvc.perform(get("/api/inventory/low-stock").param("q", barcode).with(bearer(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(belowOwnLevel));
 
         mockMvc.perform(get("/api/inventory/low-stock").param("threshold", "10").param("size", "500")
                         .with(bearer(USER)))

@@ -6,6 +6,9 @@ export const MANUFACTURERS_PATH = '/api/manufacturers';
 export interface Manufacturer {
   id: number;
   name: string;
+  type: ManufacturerType;
+  licenceNumber: string | null;
+  contactPerson: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -14,6 +17,14 @@ export interface Manufacturer {
   state: string | null;
   gstin: string | null;
 }
+
+export type ManufacturerType = 'MANUFACTURER' | 'SUPPLIER' | 'DISTRIBUTOR';
+
+export const MANUFACTURER_TYPES: { value: ManufacturerType; label: string }[] = [
+  { value: 'MANUFACTURER', label: 'Manufacturer' },
+  { value: 'SUPPLIER', label: 'Supplier' },
+  { value: 'DISTRIBUTOR', label: 'Distributor' },
+];
 
 export type ManufacturerRequest = Omit<Manufacturer, 'id'>;
 

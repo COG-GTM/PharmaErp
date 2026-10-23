@@ -13,19 +13,21 @@ const invoice: Invoice = {
   id: 7,
   invoiceNumber: 'INV-2026-0007',
   clientId: 3,
-  clientName: 'City Hospital',
   storeId: 2,
-  storeName: 'Central Store',
+  prescriptionId: null,
   status: 'PARTIALLY_PAID',
   invoiceDate: '2026-10-20',
-  invoiceDescription: 'Monthly supply',
+  description: 'Monthly supply',
   subtotal: 450,
+  cgstAmount: 20,
+  sgstAmount: 19.99,
   gstAmount: 39.99,
   totalAmount: 489.99,
   paidAmount: 200,
+  balanceDue: 289.99,
   lines: [
-    { id: 1, itemId: 1, description: 'Paracetamol 500mg', quantity: 100, unitPrice: 2.5, gstRate: 12, gstAmount: 29.99, lineTotal: 279.99 },
-    { id: 2, itemId: null, description: 'Bandage roll', quantity: 10, unitPrice: 20, gstRate: 5, gstAmount: 10, lineTotal: 210 },
+    { id: 1, itemId: 1, description: 'Paracetamol 500mg', quantity: 100, unitPrice: 2.5, taxableAmount: 250, gstRate: 12, cgstRate: 6, cgstAmount: 15, sgstRate: 6, sgstAmount: 14.99, gstAmount: 29.99, lineTotal: 279.99 },
+    { id: 2, itemId: null, description: 'Bandage roll', quantity: 10, unitPrice: 20, taxableAmount: 200, gstRate: 5, cgstRate: 2.5, cgstAmount: 5, sgstRate: 2.5, sgstAmount: 5, gstAmount: 10, lineTotal: 210 },
   ],
 };
 
@@ -70,19 +72,21 @@ describe('invoices module', () => {
   });
 
   it('lists invoices with totals', async () => {
-    const { calls } = mockApi(() => ({ body: page([invoice]) }));
+    const { calls } = mockApi(({ url }) =>
+      url.startsWith('/api/clients') ? { body: page([{ id: 3, name: 'City Hospital' }]) } : { body: page([invoice]) },
+    );
     renderAt('/invoices');
     expect(await screen.findByText('INV-2026-0007')).toBeInTheDocument();
-    expect(screen.getByText('City Hospital')).toBeInTheDocument();
+    expect(await screen.findByText('City Hospital')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View e-receipt INV-2026-0007' })).toHaveAttribute('href', '/invoices/7');
-    expect(calls[0]?.url).toMatch(/^\/api\/invoices\?page=0&size=20/);
+    expect(calls.some((c) => /^\/api\/invoices\?page=0&size=20/.test(c.url))).toBe(true);
   });
 
   it('shows a live GST breakdown while lines are edited, then creates the invoice', async () => {
     const { calls } = mockApi(({ method, url }) => {
       if (url.startsWith('/api/clients')) return { body: page([{ id: 3, name: 'City Hospital' }]) };
       if (url.startsWith('/api/stores')) return { body: page([]) };
-      if (url.startsWith('/api/inventory-items'))
+      if (url.startsWith('/api/inventory'))
         return { body: page([{ id: 1, name: 'Paracetamol 500mg', batchNo: 'B-100', unitPrice: 2.5, gstRate: 12, quantity: 500 }]) };
       if (method === 'POST') return { status: 201, body: invoice };
       if (url.startsWith('/api/payments')) return { body: page([]) };
@@ -124,7 +128,7 @@ describe('invoices module', () => {
       body: {
         clientId: 3,
         storeId: null,
-        invoiceDescription: null,
+        description: null,
         lines: [
           { itemId: 1, description: 'Paracetamol 500mg', quantity: 100, unitPrice: 2.5, gstRate: 12 },
           { itemId: null, description: 'Bandage roll', quantity: 10, unitPrice: 20, gstRate: 5 },
@@ -161,13 +165,20 @@ describe('invoices module', () => {
     const { calls } = mockApi(({ url }) => {
       if (url === '/api/invoices/7') return { body: invoice };
       if (url.startsWith('/api/payments'))
-        return { body: page([{ id: 9, receiptNumber: 'RCPT-0009', paymentAmount: 200, paymentType: 'UPI', paidAt: '2026-10-21T10:00:00Z' }]) };
+        return {
+          body: page([
+            { id: 9, invoiceId: 7, clientId: 3, paymentMethodId: 2, receiptNumber: 'RCPT-0009', amount: 200, reference: null, paymentType: 'UPI', paidAt: '2026-10-21T10:00:00Z' },
+          ]),
+        };
+      if (url.startsWith('/api/clients')) return { body: page([{ id: 3, name: 'City Hospital' }]) };
+      if (url.startsWith('/api/stores')) return { body: page([{ id: 2, name: 'Central Store' }]) };
       return undefined;
     });
     renderAt('/invoices/7');
 
     expect(await screen.findByRole('heading', { name: 'E-receipt · INV-2026-0007' })).toBeInTheDocument();
-    expect(screen.getByText('City Hospital')).toBeInTheDocument();
+    expect(await screen.findByText('City Hospital')).toBeInTheDocument();
+    expect(await screen.findByText('Central Store')).toBeInTheDocument();
     expect(await screen.findByText('RCPT-0009')).toBeInTheDocument();
     // Breakdown uses the persisted line GST (29.99 + 10.00), not a recalculation (30 + 10).
     expect(digits(screen.getByTestId('summary-gst').textContent)).toBe('39.99');
@@ -181,7 +192,7 @@ describe('invoices module', () => {
 
   it('keeps saved invoice totals and flags line/header differences', async () => {
     mockApi(({ url }) =>
-      url === '/api/invoices/7' ? { body: { ...invoice, gstAmount: 37.5, totalAmount: 487.5 } } : { body: page([]) },
+      url === '/api/invoices/7' ? { body: { ...invoice, gstAmount: 37.5, cgstAmount: 18.75, sgstAmount: 18.75, totalAmount: 487.5, balanceDue: 287.5 } } : { body: page([]) },
     );
     renderAt('/invoices/7');
     expect(await screen.findByTestId('receipt-adjustment')).toHaveTextContent(formatInr(489.99));
@@ -221,7 +232,7 @@ describe('invoices module', () => {
     mockApi(({ url }) => {
       if (url === '/api/invoices/7') return { body: invoice };
       if (url.includes('page=0'))
-        return { body: { content: [{ id: 9, receiptNumber: 'RCPT-0009', paymentAmount: 200, paymentType: 'UPI', paidAt: null }], page: 0, size: 200, totalElements: 201, totalPages: 2 } };
+        return { body: { content: [{ id: 9, receiptNumber: 'RCPT-0009', amount: 200, paymentType: 'UPI', paidAt: null }], page: 0, size: 200, totalElements: 201, totalPages: 2 } };
       return { status: 503, body: { status: 503 } };
     });
     renderAt('/invoices/7');

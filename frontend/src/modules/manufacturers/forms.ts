@@ -8,7 +8,9 @@ export type FormValues = Record<string, string>;
 export interface FieldSpec {
   name: string;
   label: string;
-  type?: 'text' | 'email' | 'tel' | 'number' | 'date' | 'password' | 'textarea';
+  type?: 'text' | 'email' | 'tel' | 'number' | 'date' | 'password' | 'textarea' | 'select';
+  /** Choices for `type: 'select'`. */
+  options?: { value: string; label: string }[];
   required?: boolean;
   maxLength?: number;
   pattern?: RegExp;

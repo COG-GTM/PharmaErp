@@ -107,18 +107,30 @@ public class InventoryService {
         return page(spec, pageable, today);
     }
 
-    /** Batches with stock left that expire within {@code days} days (inclusive), soonest first (FEFO). */
+    /**
+     * Batches with stock left that expire within {@code days} days (inclusive), soonest first (FEFO), optionally
+     * narrowed by the same free-text {@code q} as {@link #search}.
+     */
     @Transactional(readOnly = true)
-    public PageResponse<InventoryItemResponse> expiring(int days, Pageable pageable) {
+    public PageResponse<InventoryItemResponse> expiring(int days, String q, Pageable pageable) {
         LocalDate today = today();
-        return page(expiringBetween(today, today.plusDays(days)), withDefaultSort(pageable, "expiryDate"), today);
+        return page(withText(expiringBetween(today, today.plusDays(days)), q), withDefaultSort(pageable, "expiryDate"),
+                today);
     }
 
-    /** Usable batches at or below {@code threshold} (or their own reorder level when null), emptiest first. */
+    /**
+     * Usable batches at or below {@code threshold} (or their own reorder level when null), emptiest first,
+     * optionally narrowed by the same free-text {@code q} as {@link #search}.
+     */
     @Transactional(readOnly = true)
-    public PageResponse<InventoryItemResponse> lowStockItems(Integer threshold, Pageable pageable) {
+    public PageResponse<InventoryItemResponse> lowStockItems(Integer threshold, String q, Pageable pageable) {
         LocalDate today = today();
-        return page(lowStock(threshold, defaultReorderLevel, today), withDefaultSort(pageable, "quantity"), today);
+        return page(withText(lowStock(threshold, defaultReorderLevel, today), q), withDefaultSort(pageable, "quantity"),
+                today);
+    }
+
+    private static Specification<InventoryItem> withText(Specification<InventoryItem> spec, String q) {
+        return q == null || q.isBlank() ? spec : spec.and(textMatches(q));
     }
 
     @Transactional(readOnly = true)
@@ -298,7 +310,8 @@ public class InventoryService {
                 : item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
         Long daysToExpiry = item.getExpiryDate() == null ? null : ChronoUnit.DAYS.between(today, item.getExpiryDate());
         return new InventoryItemResponse(item.getId(), item.getName(), item.getDescription(), item.getBatchNo(),
-                item.getExpiryDate(), daysToExpiry, item.getQuantity(), reorderLevel, item.getUnitPrice(), stockValue,
+                item.getExpiryDate(), daysToExpiry, item.getQuantity(), reorderLevel, item.getReorderLevel(),
+                item.getUnitPrice(), stockValue,
                 item.getGstRate(), item.getHsnCode(), item.getBarcode(), item.getManufacturerId(), item.getStoreId(),
                 names.get(item.getStatusId()),
                 StockStatus.derive(item.getQuantity(), item.getExpiryDate(), reorderLevel, today),

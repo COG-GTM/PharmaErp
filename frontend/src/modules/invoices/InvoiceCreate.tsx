@@ -101,7 +101,7 @@ export function InvoiceCreate() {
       clientId: numberOrNull(clientId),
       storeId: numberOrNull(storeId),
       invoiceDate,
-      invoiceDescription: blankToNull(description),
+      description: blankToNull(description),
       lines: lines.map((l) => ({ itemId: numberOrNull(l.itemId), description: l.description.trim(), ...toInput(l) })),
     };
     setSaving(true);
@@ -151,8 +151,8 @@ export function InvoiceCreate() {
           <FormField name="invoiceDate" label="Invoice date" errors={errors}>
             <input id="field-invoiceDate" type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
           </FormField>
-          <FormField name="invoiceDescription" label="Description" errors={errors}>
-            <input id="field-invoiceDescription" maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)} />
+          <FormField name="description" label="Description" errors={errors}>
+            <input id="field-description" maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)} />
           </FormField>
         </div>
 

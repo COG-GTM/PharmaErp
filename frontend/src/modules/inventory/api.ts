@@ -1,8 +1,8 @@
 import { api, type PageResponse } from '../../api/client';
 import { fetchAll } from './lookup';
 
-/** REST contract of the inventory backend (T07). Adjust here if the backend differs. */
-export const INVENTORY_PATH = '/api/inventory-items';
+/** REST contract of the inventory backend (T07): `/api/inventory`, plus `/expiring` and `/low-stock` views. */
+export const INVENTORY_PATH = '/api/inventory';
 /** Lookups (T06 / T04) for the item form. */
 export const MANUFACTURERS_PATH = '/api/manufacturers';
 export const STORES_PATH = '/api/stores';
@@ -21,15 +21,25 @@ export interface InventoryItem {
   hsnCode: string | null;
   barcode: string | null;
   manufacturerId: number | null;
-  manufacturerName?: string | null;
   storeId: number | null;
-  storeName?: string | null;
-  statusId?: number | null;
-  statusName?: string | null;
-  /** Server-computed flags; the UI falls back to its own rules when absent. */
-  expiringSoon?: boolean;
-  lowStock?: boolean;
+  /** Server-computed: days until expiry (negative once expired), null without an expiry date. */
+  daysToExpiry?: number | null;
+  /** Per-item low-stock level; the backend flags LOW at or below it. */
+  reorderLevel?: number;
+  /** Stored per-batch level; null when the batch follows the configured default. */
+  reorderLevelOverride?: number | null;
+  stockValue?: number | null;
+  status?: string | null;
+  stockStatus?: StockStatus;
+  employeeId?: number | null;
+  clientId?: number | null;
+  assignDate?: string | null;
+  deliveryDate?: string | null;
+  totalAmount?: number | null;
+  advanceAmount?: number | null;
 }
+
+export type StockStatus = 'IN_STOCK' | 'LOW' | 'OUT_OF_STOCK' | 'EXPIRED';
 
 export type InventoryItemRequest = Pick<
   InventoryItem,
@@ -45,6 +55,48 @@ export type InventoryItemRequest = Pick<
   | 'manufacturerId'
   | 'storeId'
 >;
+
+/** Attributes the edit form does not show; they are carried over from the loaded item on update. */
+export const PRESERVED_ON_UPDATE = [
+  'reorderLevel',
+  'status',
+  'employeeId',
+  'clientId',
+  'assignDate',
+  'deliveryDate',
+  'totalAmount',
+  'advanceAmount',
+] as const;
+
+/**
+ * Body of `PUT /api/inventory/{id}`: a full replacement without `quantity`, which only changes through
+ * `POST /api/inventory/{id}/adjust` so every movement is tracked.
+ */
+export type InventoryItemUpdateRequest = Omit<InventoryItemRequest, 'quantity'> &
+  Pick<InventoryItem, (typeof PRESERVED_ON_UPDATE)[number]>;
+
+/** Movement reasons accepted by the adjust endpoint (sign rules are enforced by the backend). */
+export const ADJUSTMENT_REASONS = [
+  'RECEIPT',
+  'RETURN',
+  'TRANSFER_IN',
+  'SALE',
+  'TRANSFER_OUT',
+  'DAMAGE',
+  'EXPIRY_WRITE_OFF',
+  'CORRECTION',
+] as const;
+export type AdjustmentReason = (typeof ADJUSTMENT_REASONS)[number];
+
+export interface StockAdjustmentRequest {
+  quantityChange: number;
+  reason: AdjustmentReason;
+  note: string | null;
+}
+
+export interface StockAdjustmentResponse {
+  item: InventoryItem;
+}
 
 export type InventoryFilter = 'all' | 'expiring' | 'low-stock';
 
@@ -66,20 +118,26 @@ export const EXPIRY_WINDOW_DAYS = 30;
 export const LOW_STOCK_THRESHOLD = 10;
 
 export const inventoryApi = {
-  list: ({ q, filter = 'all', page = 0, size = 20 }: InventoryQuery = {}) =>
-    api.get<PageResponse<InventoryItem>>(INVENTORY_PATH, {
-      query: {
-        q: q || undefined,
-        expiringWithinDays: filter === 'expiring' ? EXPIRY_WINDOW_DAYS : undefined,
-        lowStockThreshold: filter === 'low-stock' ? LOW_STOCK_THRESHOLD : undefined,
-        page,
-        size,
-        sort: filter === 'expiring' ? 'expiryDate' : filter === 'low-stock' ? 'quantity' : 'name',
-      },
-    }),
+  list: ({ q, filter = 'all', page = 0, size = 20 }: InventoryQuery = {}) => {
+    if (filter === 'expiring') {
+      return api.get<PageResponse<InventoryItem>>(`${INVENTORY_PATH}/expiring`, {
+        query: { days: EXPIRY_WINDOW_DAYS, q: q || undefined, page, size, sort: 'expiryDate' },
+      });
+    }
+    if (filter === 'low-stock') {
+      // No threshold: the backend compares each item against its own reorder level.
+      return api.get<PageResponse<InventoryItem>>(`${INVENTORY_PATH}/low-stock`, {
+        query: { q: q || undefined, page, size, sort: 'quantity' },
+      });
+    }
+    return api.get<PageResponse<InventoryItem>>(INVENTORY_PATH, { query: { q: q || undefined, page, size, sort: 'name' } });
+  },
   get: (id: number | string) => api.get<InventoryItem>(`${INVENTORY_PATH}/${id}`),
   create: (body: InventoryItemRequest) => api.post<InventoryItem>(INVENTORY_PATH, body),
-  update: (id: number | string, body: InventoryItemRequest) => api.put<InventoryItem>(`${INVENTORY_PATH}/${id}`, body),
+  update: (id: number | string, body: InventoryItemUpdateRequest) =>
+    api.put<InventoryItem>(`${INVENTORY_PATH}/${id}`, body),
+  adjust: (id: number | string, body: StockAdjustmentRequest) =>
+    api.post<StockAdjustmentResponse>(`${INVENTORY_PATH}/${id}/adjust`, body),
   manufacturers: () =>
     fetchAll<Option>(MANUFACTURERS_PATH, 'name').then((all) => all.map((m): Option => ({ id: m.id, name: m.name }))),
   stores: () =>

@@ -50,7 +50,6 @@ describe('DashboardPage', () => {
     await waitFor(() => expect(screen.getByTestId('backend-status')).toHaveTextContent('Backend online'));
 
     const urls = fetchMock.mock.calls.map(([u]) => String(u));
-    expect(urls).toContain('/api/inventory-items?page=0&size=1');
     expect(urls).toContain('/api/inventory?page=0&size=1');
     expect(await screen.findByText(/Last updated/)).toBeInTheDocument();
   });
