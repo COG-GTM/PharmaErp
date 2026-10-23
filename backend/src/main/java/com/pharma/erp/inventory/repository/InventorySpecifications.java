@@ -20,6 +20,11 @@ public final class InventorySpecifications {
         return (root, query, cb) -> cb.conjunction();
     }
 
+    /** Excludes archived (deleted) batches. */
+    public static Specification<InventoryItem> active() {
+        return (root, query, cb) -> cb.isNull(root.get("archivedAt"));
+    }
+
     public static Specification<InventoryItem> textMatches(String text) {
         String like = "%" + escapeLike(text.trim().toLowerCase(Locale.ROOT)) + "%";
         return (root, query, cb) -> cb.or(

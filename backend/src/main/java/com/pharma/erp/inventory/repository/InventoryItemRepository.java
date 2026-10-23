@@ -13,13 +13,18 @@ public interface InventoryItemRepository
         extends JpaRepository<InventoryItem, Integer>, JpaSpecificationExecutor<InventoryItem> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select i from InventoryItem i where i.id = :id")
-    Optional<InventoryItem> findByIdForUpdate(@Param("id") Integer id);
+    @Query("select i from InventoryItem i where i.id = :id and i.archivedAt is null")
+    Optional<InventoryItem> findActiveByIdForUpdate(@Param("id") Integer id);
+
+    Optional<InventoryItem> findByIdAndArchivedAtIsNull(Integer id);
+
+    boolean existsByIdAndArchivedAtIsNull(Integer id);
 
     @Query("""
             select count(i) > 0 from InventoryItem i
             where i.barcode = :barcode and i.batchNo = :batchNo
               and ((:storeId is null and i.storeId is null) or i.storeId = :storeId)
+              and i.archivedAt is null
               and (:excludeId is null or i.id <> :excludeId)
             """)
     boolean existsBatch(@Param("barcode") String barcode, @Param("batchNo") String batchNo,

@@ -1,6 +1,7 @@
 package com.pharma.erp.inventory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -101,12 +103,54 @@ class InventoryIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content[1].location").value("Store " + storeId))
                 .andExpect(jsonPath("$.content[1].performedBy").value(USER));
 
+        mockMvc.perform(delete("/api/inventory/{id}", id).with(bearer(USER)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail", containsString("120 units on hand")));
+        adjust(id, -120, "DAMAGE").andExpect(status().isOk());
         mockMvc.perform(delete("/api/inventory/{id}", id).with(bearer(USER))).andExpect(status().isNoContent());
         mockMvc.perform(get("/api/inventory/{id}", id).with(bearer(USER)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM stock_tracking WHERE item_id = ?", Integer.class, id))
-                .isZero();
+        mockMvc.perform(get("/api/inventory/{id}/movements", id).with(bearer(USER))).andExpect(status().isNotFound());
+        adjust(id, 5, "RECEIPT").andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/inventory").param("barcode", barcode).with(bearer(USER)))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        assertThat(jdbc.queryForList("SELECT reason FROM stock_tracking WHERE item_id = ? ORDER BY tracking_id",
+                String.class, id)).containsExactly("RECEIPT", "STATUS_CHANGE", "DAMAGE", "STATUS_CHANGE");
+
+        body.put("quantity", 10);
+        mockMvc.perform(post("/api/inventory").with(bearer(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void storeMovesNeedEmptyBatchAndDatabaseEnforcesBatchUniqueness() throws Exception {
+        int fromStore = insertStore();
+        int toStore = insertStore();
+        String barcode = uniqueBarcode();
+        Map<String, Object> body = itemBody(barcode, 20, today.plusDays(200));
+        body.put("storeId", fromStore);
+        int id = create(body);
+
+        body.remove("quantity");
+        body.put("storeId", toStore);
+        mockMvc.perform(put("/api/inventory/{id}", id).with(bearer(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail", containsString("TRANSFER_OUT")));
+        adjust(id, -20, "TRANSFER_OUT").andExpect(status().isOk());
+        mockMvc.perform(put("/api/inventory/{id}", id).with(bearer(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.storeId").value(toStore));
+
+        String duplicate = "INSERT INTO inventory_item (item_name, barcode, batch_no, store_id) VALUES ('Dup', ?, ?, ?)";
+        assertThatThrownBy(() -> jdbc.update(duplicate, barcode, "B-" + barcode, toStore))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        jdbc.update(duplicate, barcode, "UNASSIGNED-" + barcode, null);
+        assertThatThrownBy(() -> jdbc.update(duplicate, barcode, "UNASSIGNED-" + barcode, null))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test

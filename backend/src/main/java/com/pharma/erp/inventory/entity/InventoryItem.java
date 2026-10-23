@@ -86,6 +86,9 @@ public class InventoryItem {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
+    @Column(name = "archived_at")
+    private Instant archivedAt;
+
     public Integer getId() {
         return id;
     }
@@ -248,5 +251,13 @@ public class InventoryItem {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Instant getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(Instant archivedAt) {
+        this.archivedAt = archivedAt;
     }
 }

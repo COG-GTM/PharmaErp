@@ -1,5 +1,6 @@
 package com.pharma.erp.inventory.service;
 
+import static com.pharma.erp.inventory.repository.InventorySpecifications.active;
 import static com.pharma.erp.inventory.repository.InventorySpecifications.all;
 import static com.pharma.erp.inventory.repository.InventorySpecifications.attributeEquals;
 import static com.pharma.erp.inventory.repository.InventorySpecifications.expiringBetween;
@@ -141,8 +142,12 @@ public class InventoryService {
 
     @Transactional
     public InventoryItemResponse update(Integer id, InventoryItemUpdateRequest request, String username) {
-        InventoryItem item = items.findByIdForUpdate(id).orElseThrow(() -> NotFoundException.of("Inventory item", id));
+        InventoryItem item = lockActive(id);
         Integer previousStatus = item.getStatusId();
+        if (!Objects.equals(item.getStoreId(), request.storeId()) && item.getQuantity() != 0) {
+            throw new ConflictException("Cannot move " + describe(item) + " with " + item.getQuantity()
+                    + " units on hand to another store; record TRANSFER_OUT/TRANSFER_IN adjustments instead");
+        }
         apply(item, request, id);
         items.saveAndFlush(item);
         if (!Objects.equals(previousStatus, item.getStatusId())) {
@@ -157,9 +162,15 @@ public class InventoryService {
     }
 
     @Transactional
-    public void delete(Integer id) {
-        InventoryItem item = find(id);
-        items.delete(item);
+    public void delete(Integer id, String username) {
+        InventoryItem item = lockActive(id);
+        if (item.getQuantity() != 0) {
+            throw new ConflictException("Cannot delete " + describe(item) + " with " + item.getQuantity()
+                    + " units on hand; adjust the stock out first");
+        }
+        item.setArchivedAt(Instant.now(clock));
+        items.saveAndFlush(item);
+        record(item, 0, MovementReason.STATUS_CHANGE, "Archived", locationFor(item, null), username);
     }
 
     @Transactional
@@ -176,7 +187,7 @@ public class InventoryService {
                 default -> "Reason " + reason + " cannot be used for a stock adjustment";
             });
         }
-        InventoryItem item = items.findByIdForUpdate(id).orElseThrow(() -> NotFoundException.of("Inventory item", id));
+        InventoryItem item = lockActive(id);
         LocalDate today = today();
         if (change > 0 && item.getExpiryDate() != null && item.getExpiryDate().isBefore(today)) {
             throw new ConflictException("Cannot add stock to expired batch " + describe(item));
@@ -200,7 +211,7 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public PageResponse<StockMovementResponse> movements(Integer itemId, Pageable pageable) {
-        if (!items.existsById(itemId)) {
+        if (!items.existsByIdAndArchivedAtIsNull(itemId)) {
             throw NotFoundException.of("Inventory item", itemId);
         }
         Map<Integer, String> names = statusNames();
@@ -218,7 +229,7 @@ public class InventoryService {
     private PageResponse<InventoryItemResponse> page(Specification<InventoryItem> spec, Pageable pageable,
             LocalDate today) {
         Map<Integer, String> names = statusNames();
-        return PageResponse.from(items.findAll(spec, pageable), item -> toResponse(item, names, today));
+        return PageResponse.from(items.findAll(active().and(spec), pageable), item -> toResponse(item, names, today));
     }
 
     private void apply(InventoryItem item, ItemDetails details, Integer existingId) {
@@ -268,8 +279,12 @@ public class InventoryService {
                 item.getQuantity(), note, username, Instant.now(clock)));
     }
 
+    private InventoryItem lockActive(Integer id) {
+        return items.findActiveByIdForUpdate(id).orElseThrow(() -> NotFoundException.of("Inventory item", id));
+    }
+
     private InventoryItem find(Integer id) {
-        return items.findById(id).orElseThrow(() -> NotFoundException.of("Inventory item", id));
+        return items.findByIdAndArchivedAtIsNull(id).orElseThrow(() -> NotFoundException.of("Inventory item", id));
     }
 
     private Map<Integer, String> statusNames() {

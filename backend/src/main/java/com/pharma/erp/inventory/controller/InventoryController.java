@@ -112,8 +112,8 @@ public class InventoryController {
 
     @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasAuthority('SCOPE_admin')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        service.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Integer id, Authentication authentication) {
+        service.delete(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 
