@@ -358,7 +358,11 @@ class InventoryIntegrationTest extends AbstractIntegrationTest {
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM stock_tracking t JOIN inventory_item i ON i.item_id = t.item_id "
                         + "WHERE i.batch_no LIKE 'DEMO-%' AND t.reason = 'RECEIPT'", Integer.class))
-                .isGreaterThanOrEqualTo(5);
+                .isGreaterThanOrEqualTo(4);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM stock_tracking t JOIN inventory_item i ON i.item_id = t.item_id "
+                        + "WHERE i.batch_no LIKE 'DEMO-%' AND t.quantity_change = 0", Integer.class))
+                .isZero();
     }
 
     private ResultActions adjust(int id, int change, String reason)

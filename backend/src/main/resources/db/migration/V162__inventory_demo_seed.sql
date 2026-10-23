@@ -34,4 +34,4 @@ INSERT INTO `stock_tracking` (`item_id`, `status_id`, `current_location`, `quant
 SELECT i.`item_id`, i.`status_id`, 'Demo seed', i.`quantity`, 'RECEIPT', i.`quantity`, 'Initial stock (demo seed)',
        'system'
 FROM `inventory_item` i
-WHERE i.`batch_no` LIKE 'DEMO-%';
+WHERE i.`batch_no` LIKE 'DEMO-%' AND i.`quantity` > 0;
