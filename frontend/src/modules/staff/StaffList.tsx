@@ -24,7 +24,7 @@ export function StaffList() {
     };
   }, []);
 
-  const storeName = (id: number | null) => (id === null ? '' : (stores.find((s) => s.id === id)?.name ?? `Store #${id}`));
+  const storeName = (id: number | null | undefined) => (id == null ? '' : (stores.find((s) => s.id === id)?.name ?? `Store #${id}`));
 
   useEffect(() => {
     let active = true;

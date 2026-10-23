@@ -30,7 +30,7 @@ describe('stores module', () => {
     mockApi(({ url }) =>
       url.startsWith('/api/staff')
         ? { body: page([asha]) }
-        : { body: page([central, { ...central, id: 4, code: 'ANX', name: 'Annex', managerStaffId: null }, { ...central, id: 5, name: 'Depot', managerStaffId: 99 }]) },
+        : { body: page([central, { ...central, id: 4, code: 'ANX', name: 'Annex', managerStaffId: undefined as unknown as null }, { ...central, id: 5, name: 'Depot', managerStaffId: 99 }]) },
     );
     renderAt('/stores');
 
@@ -38,6 +38,9 @@ describe('stores module', () => {
     expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
     expect(screen.getByText('Annex')).toBeInTheDocument();
     expect(screen.getByText('Staff #99')).toBeInTheDocument();
+    // The backend omits null fields (non_null inclusion): an absent manager renders as a dash.
+    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
   });
 
   it('creates a store with a manager picked from staff', async () => {
