@@ -1,0 +1,12 @@
+{
+  "tests": 360,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": 360,
+  "test_classes": 33,
+  "sum_of_testcase_seconds": 12.3,
+  "wall_clock_seconds": 92,
+  "build": "BUILD SUCCESSFUL",
+  "command": "cd backend && JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 ./gradlew --no-daemon test"
+}

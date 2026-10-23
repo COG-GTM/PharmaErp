@@ -1,0 +1,65 @@
+[
+  {
+    "name": "legacy-login",
+    "title": "Legacy JSP login page (GET /redirect, :8081); its error callouts show on first load (legacy UI defect)",
+    "file": "legacy-login.png",
+    "url": "http://127.0.0.1:8081/redirect",
+    "ok": true
+  },
+  {
+    "name": "legacy-login-success",
+    "title": "Legacy login success: POST /login returns the JWT as a JSON string",
+    "file": "legacy-login-success.png",
+    "url": "http://127.0.0.1:8081/login",
+    "ok": true
+  },
+  {
+    "name": "migrated-login",
+    "title": "Migrated React sign-in page (GET /redirect -> /signin, :8080)",
+    "file": "migrated-login.png",
+    "url": "http://127.0.0.1:8080/signin",
+    "ok": true
+  },
+  {
+    "name": "migrated-login-error",
+    "title": "Migrated failed legacy-style login (F05): /login 302 -> /signin?error (no error banner: known limitation)",
+    "file": "migrated-login-error.png",
+    "url": "http://127.0.0.1:8080/signin?error",
+    "ok": true
+  },
+  {
+    "name": "migrated-login-success",
+    "title": "Migrated legacy-compat login success: GET /login returns the JWT as a JSON string",
+    "file": "migrated-login-success.png",
+    "url": "http://127.0.0.1:8080/login?email=tarang&password=parisdkh",
+    "ok": true
+  },
+  {
+    "name": "migrated-dashboard",
+    "title": "Migrated dashboard after SPA sign-in",
+    "file": "migrated-dashboard.png",
+    "url": "http://127.0.0.1:8080/dashboard",
+    "ok": true
+  },
+  {
+    "name": "migrated-inventory",
+    "title": "Migrated inventory with expiry / low-stock badges",
+    "file": "migrated-inventory.png",
+    "url": "http://127.0.0.1:8080/inventory",
+    "ok": true
+  },
+  {
+    "name": "migrated-invoice-gst",
+    "title": "Migrated invoice receipt with GST breakdown (INV-000002)",
+    "file": "migrated-invoice-gst.png",
+    "url": "http://127.0.0.1:8080/invoices/2",
+    "ok": true
+  },
+  {
+    "name": "migrated-clients",
+    "title": "Migrated clients list",
+    "file": "migrated-clients.png",
+    "url": "http://127.0.0.1:8080/clients",
+    "ok": true
+  }
+]

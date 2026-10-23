@@ -1,0 +1,28 @@
+{
+  "git_commit": "ccfaa56ad3f8c967af2d8fbaf60ecdf637c6d260",
+  "git_base_branch_commit": "ccfaa56ad3f8c967af2d8fbaf60ecdf637c6d260",
+  "docker_engine": "29.7.2",
+  "docker_compose": "5.4.0",
+  "legacy": {
+    "app_image": "pharmaerp-legacy-legacy-app sha256:05db28c3df68056b11fe2f97dfa365701213f2f2b5fff75fddcf7d357ea200b0",
+    "java": "openjdk version \"1.8.0_504\"",
+    "tomcat": "9.0.123",
+    "db": "mysql  Ver 14.14 Distrib 5.7.44, for Linux (x86_64) using  EditLine wrapper",
+    "stack": "Java 8 servlets + JSP, Hibernate 5.2.12, Gradle 4.4.1, JJWT RS256"
+  },
+  "migrated": {
+    "backend_image": "pharmaerp-backend:local sha256:6badd24e5a7aa510d15ecee843f10eecfb54e8d74eacaaf6e2afae22f8994b1a",
+    "frontend_image": "pharmaerp-frontend:local sha256:3f6f7950cece9be3cf8387b05207dbbeba8ab65b3de762d363e653cf32098bb2",
+    "java": "openjdk version \"21.0.12.1\" 2026-08-18 LTS",
+    "spring_boot": "3.3.13",
+    "gradle": "8.10.2",
+    "db": "mysql  Ver 8.0.46 for Linux on x86_64 (MySQL Community Server - GPL)",
+    "nginx": "nginx version: nginx/1.27.5",
+    "frontend": "react ^18.3.1, vite ^5.4.21, typescript ~5.9.3, vitest ^2.1.9",
+    "flyway_migrations": "15"
+  },
+  "host": {
+    "os": "Ubuntu 22.04.5 LTS",
+    "python": "Python 3.12.13"
+  }
+}

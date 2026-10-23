@@ -1,0 +1,12 @@
+{
+  "tests": 0,
+  "build": "BUILD SUCCESSFUL",
+  "test_tasks": {
+    "Hibernate": "NO-SOURCE",
+    "MainApp": "NO-SOURCE",
+    "PharmaWebClinetIntellij": "NO-SOURCE"
+  },
+  "wall_clock_seconds": 12.6,
+  "command": "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew --no-daemon test (Gradle 4.4.1)",
+  "note": "no src/test sources in any module: every :test task is NO-SOURCE"
+}

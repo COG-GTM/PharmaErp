@@ -1,0 +1,105 @@
+{
+  "_doc": "Documented, intentional legacy -> migrated behaviour changes, consumed by parity/diff.py. A flow is only classified INTENTIONAL DIFFERENCE when its migrated response matches `expect_migrated` exactly; any other deviation from legacy is a REGRESSION.",
+  "flows": {
+    "F02": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin",
+        "body_kind": "empty"
+      },
+      "root_cause": "The JSP login page was replaced by the React SPA. The backend keeps /redirect as a legacy-compat route that 302s to the SPA sign-in page (/signin), which the nginx front door serves with 200 (verified by parity/probes.sh)."
+    },
+    "F01": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin",
+        "body_kind": "empty"
+      },
+      "root_cause": "GET / still answers 302, but the target is the SPA sign-in route /signin instead of the JSP /redirect page. Same user outcome: an anonymous visitor lands on the login form."
+    },
+    "F05": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin?error",
+        "body_kind": "empty"
+      },
+      "root_cause": "Legacy forwarded a failed login to the JSP login page (200). Migrated uses Post/Redirect/Get: 302 to /signin?error. Same outcome: no token, no cookie, back on the login form. Known limitation: the React sign-in page does not read ?error yet, so a failed legacy-style form POST shows the empty form without an error banner (the SPA's own JSON sign-in does show one)."
+    },
+    "F06": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin?error",
+        "body_kind": "empty"
+      },
+      "root_cause": "Same Post/Redirect/Get change as F05. Unknown users and wrong passwords stay indistinguishable (same redirect; AuthService burns one BCrypt check for unknown users so timing does not leak either)."
+    },
+    "F07": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin",
+        "body_kind": "empty"
+      },
+      "root_cause": "Legacy silently fell through to the login page when email/password were missing. Migrated redirects to /signin without ?error (nothing was attempted). No token, no cookie."
+    },
+    "F09": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin?error",
+        "body_kind": "empty"
+      },
+      "root_cause": "Password comparison is still case-sensitive (PARISDKH rejected); only the failure transport changed (Post/Redirect/Get, see F05)."
+    },
+    "F10": {
+      "category": "defect fix",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin?error",
+        "body_kind": "empty"
+      },
+      "root_cause": "Legacy built HQL by string concatenation (FROM com.schema.User U WHERE U.username='...'), so a quote produced org.hibernate.QueryException and the exception text was returned to the client (injection surface + information leak). Migrated looks the user up by primary key through Spring Data JPA (bound parameter) and treats it as an ordinary failed login."
+    },
+    "F11": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 302,
+        "location": "/signin?error",
+        "body_kind": "empty"
+      },
+      "root_cause": "Injection payload is rejected on both sides (legacy happened to fail the plaintext compare). Migrated uses a bound parameter and the Post/Redirect/Get failure transport (see F05)."
+    },
+    "F15": {
+      "category": "defect fix",
+      "expect_migrated": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "body_kind": "json"
+      },
+      "root_cause": "Legacy GET /token minted a signed admin JWT for the hard-coded user 'tarangparikh' to any unauthenticated caller (privilege-escalation defect). Migrated /token only re-issues a token for a caller that already presents a valid JWT (cookie or Bearer) and returns RFC 7807 401 otherwise."
+    },
+    "F16": {
+      "category": "modernisation",
+      "expect_migrated": {
+        "status": 401,
+        "content_type": "application/problem+json",
+        "body_kind": "json"
+      },
+      "root_cause": "Spring Security is deny-by-default: unauthenticated requests to any non-public path get 401 before routing, so anonymous callers cannot enumerate routes. An authenticated request to /nonexistent returns 404 (verified by parity/probes.sh), and the nginx front door serves the SPA for unknown browser routes."
+    }
+  },
+  "global": {
+    "jwt.signature_len": {
+      "category": "modernisation",
+      "root_cause": "Legacy signs with the RSA-1024 private key committed to the repo (WEB-INF/StoredObject/system.key; 171-char RS256 signature). Migrated generates a per-environment RSA-2048 key pair at first start (jwt-keys service; 342-char signature). Algorithm (RS256), claims and TTL are unchanged; tokens are not interchangeable between the estates."
+    },
+    "cookie.JSESSIONID": {
+      "category": "modernisation",
+      "root_cause": "Legacy Tomcat creates an HTTP session (JSESSIONID) on JSP/servlet requests. The migrated API is stateless (SessionCreationPolicy.STATELESS); the only auth state is the JWT 'token' cookie / Bearer header."
+    }
+  }
+}

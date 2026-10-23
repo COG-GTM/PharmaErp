@@ -1,0 +1,74 @@
+{
+  "diff": {
+    "equivalent": true,
+    "problems": [],
+    "storage_changes": {
+      "accounts": "plaintext -> bcrypt",
+      "pharmacist01": "plaintext -> bcrypt",
+      "storemgr": "plaintext -> bcrypt",
+      "tarang": "plaintext -> bcrypt"
+    }
+  },
+  "legacy": {
+    "student": {
+      "row_count": 0,
+      "rows": []
+    },
+    "user": {
+      "row_count": 4,
+      "rows": [
+        {
+          "storage": "plaintext",
+          "username": "accounts",
+          "verifies_with_seed_plaintext": true
+        },
+        {
+          "storage": "plaintext",
+          "username": "pharmacist01",
+          "verifies_with_seed_plaintext": true
+        },
+        {
+          "storage": "plaintext",
+          "username": "storemgr",
+          "verifies_with_seed_plaintext": true
+        },
+        {
+          "storage": "plaintext",
+          "username": "tarang",
+          "verifies_with_seed_plaintext": true
+        }
+      ]
+    }
+  },
+  "migrated": {
+    "student": {
+      "row_count": 0,
+      "rows": []
+    },
+    "user": {
+      "row_count": 4,
+      "rows": [
+        {
+          "storage": "bcrypt",
+          "username": "accounts",
+          "verifies_with_seed_plaintext": true
+        },
+        {
+          "storage": "bcrypt",
+          "username": "pharmacist01",
+          "verifies_with_seed_plaintext": true
+        },
+        {
+          "storage": "bcrypt",
+          "username": "storemgr",
+          "verifies_with_seed_plaintext": true
+        },
+        {
+          "storage": "bcrypt",
+          "username": "tarang",
+          "verifies_with_seed_plaintext": true
+        }
+      ]
+    }
+  }
+}
