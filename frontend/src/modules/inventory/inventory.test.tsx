@@ -83,7 +83,10 @@ describe('inventory module', () => {
   });
 
   it('lists items with expiry and stock badges', async () => {
-    mockApi(() => ({ body: page([base, expiring, low, expired]) }));
+    mockApi(({ url }) => {
+      if (url.startsWith('/api/stores')) return { body: page([{ id: 2, name: 'Central Store' }]) };
+      return { body: page([base, expiring, { ...low, manufacturerName: undefined, manufacturerId: 6 }, expired]) };
+    });
     renderAt('/inventory');
 
     const row = await screen.findByTestId('item-2');
@@ -92,6 +95,7 @@ describe('inventory module', () => {
     expect(within(screen.getByTestId('item-4')).getByText('Expired')).toBeInTheDocument();
     expect(within(screen.getByTestId('item-4')).getByText('Out of stock')).toBeInTheDocument();
     expect(within(screen.getByTestId('item-1')).queryByText(/Expires|stock/)).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('item-3')).getByText('#6')).toBeInTheDocument();
   });
 
   it('switches to the expiring-soon and low-stock filters', async () => {
@@ -116,7 +120,7 @@ describe('inventory module', () => {
     const { calls } = mockApi(() => ({ body: page([low]) }));
     renderAt('/inventory?filter=low-stock');
     expect(await screen.findByTestId('item-3')).toBeInTheDocument();
-    expect(calls[0]?.url).toContain('lowStockThreshold=10');
+    expect(calls.find((c) => c.url.startsWith('/api/inventory-items'))?.url).toContain('lowStockThreshold=10');
   });
 
   it('creates an item with manufacturer and store', async () => {

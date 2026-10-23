@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { PageResponse } from '../../api/client';
-import { EXPIRY_WINDOW_DAYS, LOW_STOCK_THRESHOLD, inventoryApi, type InventoryFilter, type InventoryItem } from './api';
+import { EXPIRY_WINDOW_DAYS, LOW_STOCK_THRESHOLD, inventoryApi, type InventoryFilter, type InventoryItem, type Option } from './api';
 import { errorMessage } from './forms';
 import { applyFilter, stockBadges } from './stock';
 
@@ -23,6 +23,21 @@ export function InventoryList() {
   const [page, setPage] = useState(0);
   const [data, setData] = useState<PageResponse<InventoryItem> | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [manufacturers, setManufacturers] = useState<Option[]>([]);
+  const [stores, setStores] = useState<Option[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    // Name lookups are best-effort; the table falls back to ids.
+    inventoryApi.manufacturers().then((m) => active && setManufacturers(m)).catch(() => undefined);
+    inventoryApi.stores().then((s) => active && setStores(s)).catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const nameOf = (options: Option[], id: number | null, fallback?: string | null) =>
+    id === null ? '' : (fallback ?? options.find((o) => o.id === id)?.name ?? `#${id}`);
 
   useEffect(() => {
     let active = true;
@@ -114,8 +129,8 @@ export function InventoryList() {
                 <td className="num">{item.quantity}</td>
                 <td className="num">{item.unitPrice?.toFixed(2)}</td>
                 <td className="num">{item.gstRate}</td>
-                <td>{item.manufacturerName ?? (item.manufacturerId ? `#${item.manufacturerId}` : '')}</td>
-                <td>{item.storeName ?? (item.storeId ? `#${item.storeId}` : '')}</td>
+                <td>{nameOf(manufacturers, item.manufacturerId, item.manufacturerName)}</td>
+                <td>{nameOf(stores, item.storeId, item.storeName)}</td>
                 <td>
                   {stockBadges(item).map((b) => (
                     <span key={b.label} className={`badge badge-${b.tone}`}>
