@@ -1,12 +1,13 @@
 # legacy-compat routes
-F02 front door GET /redirect (follow redirects)                -> 200 http://127.0.0.1:8080/signin
-F01 front door GET / (SPA)                                     -> 200 text/html
-F16 backend GET /nonexistent with Bearer token                 -> 404
-F16 front door GET /nonexistent (SPA fallback)                 -> 200 text/html
-F15 backend GET /token with token cookie                       -> 200 application/json
-F15 backend GET /token with Bearer token                       -> 200 application/json
-F15 backend GET /token with forged/garbage token               -> 401
-F15 legacy GET /token, no credentials                          -> 200 application/json;charset=ISO-8859-1
+OK   F02 front door GET /redirect (follow redirects)                -> 200 http://127.0.0.1:8080/signin
+OK   F01 front door GET / (SPA)                                     -> 200 text/html
+OK   F16 backend GET /nonexistent with Bearer token                 -> 404
+OK   F16 front door GET /nonexistent (SPA fallback)                 -> 200 text/html
+OK   F15 backend GET /token with token cookie                       -> 200 application/json
+OK   F15 backend GET /token with Bearer token                       -> 200 application/json
+OK   F15 backend GET /token with forged/garbage token               -> 401
+OK   F15 legacy GET /token, no credentials (legacy defect)          -> 200 application/json;charset=ISO-8859-1
 # cross-estate tokens
-legacy-minted 'tarangparikh' JWT presented to migrated /api/auth/me -> 401
-migrated JWT presented to migrated /api/auth/me                -> 200
+OK   legacy-minted 'tarangparikh' JWT presented to migrated /api/auth/me -> 401
+OK   migrated JWT presented to migrated /api/auth/me                -> 200
+# result: all probes met their expected result

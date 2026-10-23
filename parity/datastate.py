@@ -57,8 +57,8 @@ def diff(legacy, migrated):
     if set(lu) != set(mu):
         problems.append(f"usernames differ: legacy-only={sorted(set(lu) - set(mu))} migrated-only={sorted(set(mu) - set(lu))}")
     for name in sorted(set(lu) & set(mu)):
-        if lu[name]["verifies_with_seed_plaintext"] != mu[name]["verifies_with_seed_plaintext"]:
-            problems.append(f"{name}: password verification differs")
+        if not lu[name]["verifies_with_seed_plaintext"] or not mu[name]["verifies_with_seed_plaintext"]:
+            problems.append(f"{name}: seed password does not verify in both estates")
     if legacy["student"] != migrated["student"]:
         problems.append("student rows differ")
     storage = {n: f'{lu[n]["storage"]} -> {mu[n]["storage"]}' for n in sorted(set(lu) & set(mu))

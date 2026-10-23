@@ -59,7 +59,10 @@ def classify(fid, legacy, migrated, known):
     if spec is None:
         entry.update(status="REGRESSION", reason="behaviour changed and no documented intentional difference")
         return entry
-    mismatched = {k: {"expected": v, "actual": mf.get(k)} for k, v in spec["expect_migrated"].items() if mf.get(k) != v}
+    expect = spec["expect_migrated"]
+    mismatched = {k: {"expected": v, "actual": mf.get(k)} for k, v in expect.items() if mf.get(k) != v}
+    mismatched.update({k: {"expected": "unchanged from legacy (not in expect_migrated)", "actual": mf[k]}
+                       for k in changed if k not in expect})
     if mismatched or undocumented_nf:
         entry.update(status="REGRESSION", reason=f"documented expectation not met: {mismatched or undocumented_nf}")
         return entry
@@ -72,15 +75,20 @@ def main():
     ap.add_argument("--legacy", default="parity/results/legacy.json")
     ap.add_argument("--migrated", default="parity/results/migrated.json")
     ap.add_argument("--known", default="parity/known-differences.json")
+    ap.add_argument("--flows", default="parity/flows.json")
     ap.add_argument("--out", default="parity/results/diff.json")
     a = ap.parse_args()
     legacy = {f["id"]: f for f in json.load(open(a.legacy))["flows"]}
     migrated = {f["id"]: f for f in json.load(open(a.migrated))["flows"]}
     known = json.load(open(a.known))
+    expected = [f["id"] for f in json.load(open(a.flows))]
     flows = []
-    for fid in legacy:
-        if fid not in migrated:
-            flows.append({"id": fid, "name": legacy[fid]["name"], "status": "REGRESSION", "reason": "missing from migrated run"})
+    for fid in expected + sorted((set(legacy) | set(migrated)) - set(expected)):
+        missing = [side for side, cap in (("legacy", legacy), ("migrated", migrated)) if fid not in cap]
+        if fid not in expected or missing:
+            name = (legacy.get(fid) or migrated.get(fid))["name"] if not len(missing) == 2 else fid
+            reason = "not in flows.json" if fid not in expected else f"missing from {' and '.join(missing)} run"
+            flows.append({"id": fid, "name": name, "status": "REGRESSION", "reason": reason})
             continue
         flows.append(classify(fid, legacy[fid], migrated[fid], known))
     globals_seen = {}

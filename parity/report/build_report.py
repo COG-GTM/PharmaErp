@@ -218,7 +218,7 @@ Passwords were compared by checking whether the stored value verifies against th
 <section><h2>9. Screenshots (headless Chromium via Playwright)</h2><div class="gal">{gallery}</div></section>
 
 <section><h2>10. Supplementary probes (<span class="m">parity/probes.sh</span>)</h2>
-<p class="note">These check the parts of the migrated behaviour that the 16-flow replay cannot reach: the browser front door, authenticated <span class="m">/token</span> reissue, and cross-estate token rejection.</p><pre>{e(probes)}</pre></section>
+<p class="note">These check the parts of the migrated behaviour that the 16-flow replay cannot reach: the browser front door, authenticated <span class="m">/token</span> reissue, and cross-estate token rejection. Each probe asserts an expected result (OK/FAIL), and the script exits 1 on any FAIL.</p><pre>{e(probes)}</pre></section>
 
 <section><h2>11. How to reproduce</h2><pre>git checkout devin/hcl-t13-parity
 # legacy estate (Tomcat 9 / JDK 8 / MySQL 5.7, port 8081), seeded from parity/seed/
