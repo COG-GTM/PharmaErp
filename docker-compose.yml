@@ -1,0 +1,113 @@
+# Modernised Pharma ERP estate: MySQL 8 + Spring Boot 3 backend + React SPA behind nginx.
+#   docker compose up -d --build        ->  http://localhost:8080
+# Configuration is read from PHARMA_* variables (shell or a git-ignored .env file) so that generic
+# DB_* variables exported on a developer machine never leak into the containers. See docs/RUNBOOK.md.
+name: pharmaerp
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PHARMA_DB_ROOT_PASSWORD:-admin}
+      MYSQL_DATABASE: ${PHARMA_DB_NAME:-PHARMA_ERP}
+      MYSQL_USER: ${PHARMA_DB_USER:-pharma}
+      MYSQL_PASSWORD: ${PHARMA_DB_PASSWORD:-pharma}
+      TZ: UTC
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    ports:
+      - "127.0.0.1:${PHARMA_DB_HOST_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # Run a query over TCP as the app user so "healthy" means the backend's credentials work
+      # (mysqladmin ping succeeds even on access denied; the init-only server listens on the socket only).
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u\"$$MYSQL_USER\" -p\"$$MYSQL_PASSWORD\" \"$$MYSQL_DATABASE\" -e 'SELECT 1' > /dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # One-shot: creates a persistent RS256 key pair on first start so JWTs survive backend restarts.
+  jwt-keys:
+    image: pharmaerp-backend:${PHARMA_IMAGE_TAG:-local}
+    build:
+      context: ./backend
+      args:
+        MAVEN_MIRROR: ${PHARMA_MAVEN_MIRROR:-}
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        if [ -s /keys/jwt-private.pem ] && [ -s /keys/jwt-public.pem ]; then
+          echo "JWT key pair already present"
+        else
+          openssl genpkey -quiet -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /keys/jwt-private.pem
+          openssl pkey -in /keys/jwt-private.pem -pubout -out /keys/jwt-public.pem
+          echo "Generated JWT key pair"
+        fi
+        chown 10001:10001 /keys/jwt-private.pem /keys/jwt-public.pem
+        chmod 0400 /keys/jwt-private.pem
+        chmod 0444 /keys/jwt-public.pem
+    volumes:
+      - jwt-keys:/keys
+    healthcheck:
+      disable: true
+    restart: "no"
+
+  backend:
+    image: pharmaerp-backend:${PHARMA_IMAGE_TAG:-local}
+    build:
+      context: ./backend
+      args:
+        MAVEN_MIRROR: ${PHARMA_MAVEN_MIRROR:-}
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      jwt-keys:
+        condition: service_completed_successfully
+    environment:
+      PORT: "8090"
+      DB_URL: jdbc:mysql://mysql:3306/${PHARMA_DB_NAME:-PHARMA_ERP}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USER: ${PHARMA_DB_USER:-pharma}
+      DB_PASSWORD: ${PHARMA_DB_PASSWORD:-pharma}
+      JWT_PRIVATE_KEY_PATH: /run/keys/jwt-private.pem
+      JWT_PUBLIC_KEY_PATH: /run/keys/jwt-public.pem
+      JWT_TTL: ${PHARMA_JWT_TTL:-PT1H}
+      CORS_ALLOWED_ORIGINS: ${PHARMA_CORS_ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      TZ: UTC
+    ports:
+      - "127.0.0.1:${PHARMA_BACKEND_HOST_PORT:-8090}:8090"
+    volumes:
+      - jwt-keys:/run/keys:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  frontend:
+    image: pharmaerp-frontend:${PHARMA_IMAGE_TAG:-local}
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_URL: http://backend:8090
+    ports:
+      - "${PHARMA_HTTP_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+
+volumes:
+  mysql-data:
+  jwt-keys:
