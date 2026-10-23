@@ -46,6 +46,23 @@ describe('AuthProvider', () => {
     expect(getToken()).toBeNull();
   });
 
+  it('keeps long-lived sessions until the real expiry beyond the setTimeout cap', () => {
+    vi.useFakeTimers();
+    const day = 24 * 60 * 60 * 1000;
+    setToken(makeJwt({ username: 'tarang', exp: Math.floor((Date.now() + 30 * day) / 1000) }));
+    renderProbe();
+
+    act(() => {
+      vi.advanceTimersByTime(26 * day);
+    });
+    expect(screen.getByTestId('probe')).toHaveTextContent('in:tarang');
+
+    act(() => {
+      vi.advanceTimersByTime(5 * day);
+    });
+    expect(screen.getByTestId('probe')).toHaveTextContent('out');
+  });
+
   it('signs out when the API reports 401', () => {
     setToken('opaque-token');
     renderProbe();

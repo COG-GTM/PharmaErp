@@ -57,13 +57,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const claims = useMemo(() => (token ? decodeJwt(token) : null), [token]);
 
   useEffect(() => {
-    const remaining = msUntilExpiry(claims);
-    if (remaining === null) return undefined;
-    if (remaining <= 0) {
-      signOut();
-      return undefined;
-    }
-    const timer = window.setTimeout(signOut, Math.min(remaining, MAX_TIMEOUT));
+    let timer: number | undefined;
+    const schedule = () => {
+      const remaining = msUntilExpiry(claims);
+      if (remaining === null) return;
+      if (remaining <= 0) {
+        signOut();
+        return;
+      }
+      timer = window.setTimeout(schedule, Math.min(remaining, MAX_TIMEOUT));
+    };
+    schedule();
     return () => window.clearTimeout(timer);
   }, [claims, signOut]);
 

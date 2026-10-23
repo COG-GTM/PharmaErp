@@ -25,13 +25,12 @@ export type KpiResult =
   | { kind: 'forbidden' }
   | { kind: 'error'; message: string };
 
-/** Count from a PageResponse (`totalElements`), a `{ content: [] }` wrapper or a plain array. */
+/** Count from a PageResponse (`totalElements`) or a plain array. A paged wrapper without a total is not countable. */
 export function countFrom(data: unknown): number | null {
   if (Array.isArray(data)) return data.length;
   if (data && typeof data === 'object') {
     const record = data as Record<string, unknown>;
     if (typeof record.totalElements === 'number') return record.totalElements;
-    if (Array.isArray(record.content)) return record.content.length;
   }
   return null;
 }

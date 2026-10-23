@@ -74,7 +74,7 @@ describe('DashboardPage', () => {
 describe('countFrom', () => {
   it.each([
     [{ totalElements: 5, content: [] }, 5],
-    [{ content: [1, 2] }, 2],
+    [{ content: [1] }, null],
     [[1, 2, 3], 3],
     [{ foo: 1 }, null],
     ['x', null],

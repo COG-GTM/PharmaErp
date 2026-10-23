@@ -18,7 +18,11 @@ export function extractToken(data: unknown): string | null {
   return null;
 }
 
+let pendingLogout: Promise<void> | null = null;
+
 export async function requestLogin(username: string, password: string): Promise<string> {
+  // A late logout response must not clear the cookie set by this login.
+  if (pendingLogout) await pendingLogout;
   const data = await api.post<unknown>(LOGIN_ENDPOINT, { username: username.trim(), password });
   const token = extractToken(data);
   if (!token) throw new Error('The server did not return an access token.');
@@ -26,6 +30,13 @@ export async function requestLogin(username: string, password: string): Promise<
 }
 
 /** Best effort: lets the backend clear its `token` cookie. Failures (e.g. 404) are ignored. */
-export async function requestLogout(): Promise<void> {
-  await api.post(LOGOUT_ENDPOINT).catch(() => undefined);
+export function requestLogout(): Promise<void> {
+  const request: Promise<void> = api
+    .post(LOGOUT_ENDPOINT)
+    .then(() => undefined, () => undefined)
+    .finally(() => {
+      if (pendingLogout === request) pendingLogout = null;
+    });
+  pendingLogout = request;
+  return request;
 }
