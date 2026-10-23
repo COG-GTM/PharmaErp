@@ -64,7 +64,7 @@ class LegacyAuthController {
     ResponseEntity<String> token() {
         CurrentToken current = CurrentToken.require();
         IssuedToken token = authService
-                .reissue(current.username(), current.scope())
+                .reissue(current.username())
                 .orElseThrow(() -> new UnauthorizedException("Authentication required"));
         return tokenResponse(token);
     }

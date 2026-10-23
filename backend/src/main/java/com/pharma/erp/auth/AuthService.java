@@ -52,13 +52,16 @@ public class AuthService {
         return Optional.of(issue(user.getUsername(), LEGACY_SCOPE));
     }
 
-    /** Re-issues a token for an already authenticated user, provided the account still exists. */
+    /**
+     * Re-issues a token for an already authenticated user, provided the account still exists. The scope is
+     * derived server-side from the account, never copied from the presented token.
+     */
     @Transactional(readOnly = true)
-    public Optional<IssuedToken> reissue(String username, String scope) {
+    public Optional<IssuedToken> reissue(String username) {
         if (username == null || findExact(username).isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(issue(username, scope == null || scope.isBlank() ? LEGACY_SCOPE : scope));
+        return Optional.of(issue(username, LEGACY_SCOPE));
     }
 
     IssuedToken issue(String username, String scope) {

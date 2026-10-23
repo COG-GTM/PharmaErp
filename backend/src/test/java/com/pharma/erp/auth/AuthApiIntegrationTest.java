@@ -193,6 +193,30 @@ class AuthApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void tokenDerivesScopeFromTheAccountNotThePresentedToken() throws Exception {
+        String username = newPlaintextUser("Secret#123");
+        String elevated = jwtService.issueToken(username, "superuser");
+
+        MvcResult result = mockMvc.perform(get("/token").header("Authorization", "Bearer " + elevated))
+                .andExpect(status().isOk())
+                .andReturn();
+        String reissued = objectMapper.readValue(result.getResponse().getContentAsString(), String.class);
+        assertThat(payload(reissued).get("scope").asText()).isEqualTo("admin");
+    }
+
+    @Test
+    void tokenCookieIsHttpOnlySecureAndSameSiteStrict() throws Exception {
+        String username = newPlaintextUser("Secret#123");
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("username", username, "password", "Secret#123"))))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=Strict")));
+    }
+
+    @Test
     void tokenRejectsForeignSignedTokensAndDeletedUsers() throws Exception {
         String username = newPlaintextUser("Secret#123");
         JwtService foreignIssuer = new JwtService(new JwtProperties(null, null, Duration.ofHours(1), "token"));
