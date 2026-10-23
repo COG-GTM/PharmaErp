@@ -1,14 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { PageResponse } from '../../api/client';
-import { EXPIRY_WINDOW_DAYS, LOW_STOCK_THRESHOLD, inventoryApi, type InventoryFilter, type InventoryItem, type Option } from './api';
+import { EXPIRY_WINDOW_DAYS, inventoryApi, type InventoryFilter, type InventoryItem, type Option } from './api';
 import { errorMessage } from './forms';
 import { applyFilter, stockBadges } from './stock';
 
 const FILTERS: { value: InventoryFilter; label: string }[] = [
   { value: 'all', label: 'All items' },
   { value: 'expiring', label: `Expiring soon (≤ ${EXPIRY_WINDOW_DAYS} days)` },
-  { value: 'low-stock', label: `Low stock (≤ ${LOW_STOCK_THRESHOLD})` },
+  { value: 'low-stock', label: 'Low stock (≤ reorder level)' },
 ];
 
 function parseFilter(raw: string | null): InventoryFilter {

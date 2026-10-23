@@ -114,7 +114,7 @@ export interface Option {
 
 /** Window used for the "expiring soon" filter and badge. */
 export const EXPIRY_WINDOW_DAYS = 30;
-/** Quantity at or below which an item counts as low stock. */
+/** Fallback low-stock level for items without their own reorder level. */
 export const LOW_STOCK_THRESHOLD = 10;
 
 export const inventoryApi = {
