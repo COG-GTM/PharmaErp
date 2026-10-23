@@ -117,7 +117,7 @@ class StaffControllerIntegrationTest extends StaffTestSupport {
     void linksExistingUserAndStoreAndRejectsDuplicates() throws Exception {
         String username = "stf" + unique().substring(0, 7);
         jdbc.update("INSERT INTO `user` (`username`, `password`) VALUES (?, 'password1')", username);
-        jdbc.update("INSERT INTO `store` (`store_name`) VALUES (?)", "Store " + username);
+        jdbc.update("INSERT INTO `store` (`store_code`, `store_name`) VALUES (?, ?)", "STF-" + username, "Store " + username);
         Integer storeId = jdbc.queryForObject(
                 "SELECT store_id FROM store WHERE store_name = ?", Integer.class, "Store " + username);
 

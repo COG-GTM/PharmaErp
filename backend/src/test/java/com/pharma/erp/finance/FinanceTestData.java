@@ -21,7 +21,9 @@ final class FinanceTestData {
     }
 
     int store() {
-        return insert("INSERT INTO `store` (`store_name`) VALUES (?)", "Finance IT store " + UUID.randomUUID());
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        return insert("INSERT INTO `store` (`store_code`, `store_name`) VALUES ('FIN-" + suffix + "', ?)",
+                "Finance IT store " + suffix);
     }
 
     int item(String name) {

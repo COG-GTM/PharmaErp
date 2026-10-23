@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.pharma.erp.common.web.ConflictException;
 import com.pharma.erp.common.web.NotFoundException;
+import com.pharma.erp.finance.service.InvoiceSettlementService;
 import com.pharma.erp.payments.dto.PaymentRequest;
 import com.pharma.erp.payments.dto.PaymentResponse;
 import com.pharma.erp.payments.entity.Payment;
@@ -30,6 +32,7 @@ class PaymentServiceTest {
     PaymentRepository payments;
     PaymentMethodService methods;
     InvoiceLookup invoices;
+    InvoiceSettlementService settlement;
     PaymentService service;
 
     @BeforeEach
@@ -37,7 +40,8 @@ class PaymentServiceTest {
         payments = mock(PaymentRepository.class);
         methods = mock(PaymentMethodService.class);
         invoices = mock(InvoiceLookup.class);
-        service = new PaymentService(payments, methods, invoices, Clock.fixed(NOW, ZoneOffset.UTC));
+        settlement = mock(InvoiceSettlementService.class);
+        service = new PaymentService(payments, methods, invoices, settlement, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     @Test
@@ -52,7 +56,7 @@ class PaymentServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> service.record(new PaymentRequest(1, 1, new BigDecimal("-5.00"), null)))
                 .isInstanceOf(IllegalArgumentException.class);
-        verifyNoInteractions(invoices, methods, payments);
+        verifyNoInteractions(invoices, methods, payments, settlement);
     }
 
     @Test
@@ -89,6 +93,7 @@ class PaymentServiceTest {
         assertThat(response.reference()).isEqualTo("ref");
         assertThat(response.receiptNumber()).isEqualTo("RCPT-00000099");
         assertThat(response.paidAt()).isEqualTo(Instant.parse("2026-10-23T10:15:30Z"));
+        verify(settlement).applyPayment(7, new BigDecimal("12.50"));
     }
 
     private static Payment withId(Payment payment, int id) throws ReflectiveOperationException {

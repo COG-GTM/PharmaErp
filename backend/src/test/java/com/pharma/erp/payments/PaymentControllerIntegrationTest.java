@@ -1,5 +1,6 @@
 package com.pharma.erp.payments;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.startsWith;
@@ -180,6 +181,24 @@ class PaymentControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/payments")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/payments").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void paymentsSettleTheInvoiceAndOverpaymentIsRejected() throws Exception {
+        int upiId = jdbc.queryForObject(
+                "SELECT payment_method_id FROM payment_method WHERE method_name = 'UPI'", Integer.class);
+        pay(invoiceId, cashId, "1200", "part").andExpect(status().isCreated());
+        assertThat(jdbc.queryForMap("SELECT paid_amount, status FROM invoice WHERE invoice_id = ?", invoiceId))
+                .containsEntry("paid_amount", new java.math.BigDecimal("1200.00"))
+                .containsEntry("status", "PARTIALLY_PAID");
+
+        pay(invoiceId, cashId, "3800.01", "too much").andExpect(status().isConflict());
+
+        pay(invoiceId, upiId, "3800", "rest").andExpect(status().isCreated());
+        assertThat(jdbc.queryForMap("SELECT paid_amount, status FROM invoice WHERE invoice_id = ?", invoiceId))
+                .containsEntry("paid_amount", new java.math.BigDecimal("5000.00"))
+                .containsEntry("status", "PAID");
+        pay(invoiceId, cashId, "0.01", "after paid").andExpect(status().isConflict());
     }
 
     private ResultActions pay(int invoice, int method, String amount, String reference) throws Exception {
