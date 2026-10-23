@@ -1,8 +1,8 @@
 import { api, type PageResponse } from '../../api/client';
 import { fetchAll } from './lookup';
 
-/** REST contract of the inventory backend (T07). Adjust here if the backend differs. */
-export const INVENTORY_PATH = '/api/inventory-items';
+/** REST contract of the inventory backend (T07): `/api/inventory`, plus `/expiring` and `/low-stock` views. */
+export const INVENTORY_PATH = '/api/inventory';
 /** Lookups (T06 / T04) for the item form. */
 export const MANUFACTURERS_PATH = '/api/manufacturers';
 export const STORES_PATH = '/api/stores';
@@ -21,15 +21,17 @@ export interface InventoryItem {
   hsnCode: string | null;
   barcode: string | null;
   manufacturerId: number | null;
-  manufacturerName?: string | null;
   storeId: number | null;
-  storeName?: string | null;
-  statusId?: number | null;
-  statusName?: string | null;
-  /** Server-computed flags; the UI falls back to its own rules when absent. */
-  expiringSoon?: boolean;
-  lowStock?: boolean;
+  /** Server-computed: days until expiry (negative once expired), null without an expiry date. */
+  daysToExpiry?: number | null;
+  /** Per-item low-stock level; the backend flags LOW at or below it. */
+  reorderLevel?: number;
+  stockValue?: number | null;
+  status?: string | null;
+  stockStatus?: StockStatus;
 }
+
+export type StockStatus = 'IN_STOCK' | 'LOW' | 'OUT_OF_STOCK' | 'EXPIRED';
 
 export type InventoryItemRequest = Pick<
   InventoryItem,
@@ -66,17 +68,20 @@ export const EXPIRY_WINDOW_DAYS = 30;
 export const LOW_STOCK_THRESHOLD = 10;
 
 export const inventoryApi = {
-  list: ({ q, filter = 'all', page = 0, size = 20 }: InventoryQuery = {}) =>
-    api.get<PageResponse<InventoryItem>>(INVENTORY_PATH, {
-      query: {
-        q: q || undefined,
-        expiringWithinDays: filter === 'expiring' ? EXPIRY_WINDOW_DAYS : undefined,
-        lowStockThreshold: filter === 'low-stock' ? LOW_STOCK_THRESHOLD : undefined,
-        page,
-        size,
-        sort: filter === 'expiring' ? 'expiryDate' : filter === 'low-stock' ? 'quantity' : 'name',
-      },
-    }),
+  list: ({ q, filter = 'all', page = 0, size = 20 }: InventoryQuery = {}) => {
+    if (filter === 'expiring') {
+      return api.get<PageResponse<InventoryItem>>(`${INVENTORY_PATH}/expiring`, {
+        query: { days: EXPIRY_WINDOW_DAYS, page, size, sort: 'expiryDate' },
+      });
+    }
+    if (filter === 'low-stock') {
+      // No threshold: the backend compares each item against its own reorder level.
+      return api.get<PageResponse<InventoryItem>>(`${INVENTORY_PATH}/low-stock`, {
+        query: { page, size, sort: 'quantity' },
+      });
+    }
+    return api.get<PageResponse<InventoryItem>>(INVENTORY_PATH, { query: { q: q || undefined, page, size, sort: 'name' } });
+  },
   get: (id: number | string) => api.get<InventoryItem>(`${INVENTORY_PATH}/${id}`),
   create: (body: InventoryItemRequest) => api.post<InventoryItem>(INVENTORY_PATH, body),
   update: (id: number | string, body: InventoryItemRequest) => api.put<InventoryItem>(`${INVENTORY_PATH}/${id}`, body),

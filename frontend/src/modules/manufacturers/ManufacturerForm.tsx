@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { manufacturersApi, type ManufacturerRequest } from './api';
+import { MANUFACTURER_TYPES, manufacturersApi, type ManufacturerRequest, type ManufacturerType } from './api';
 import { SpecFields } from './FormField';
 import {
   blankToNull,
@@ -18,6 +18,9 @@ const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 
 const MANUFACTURER_FIELDS: FieldSpec[] = [
   { name: 'name', label: 'Name', required: true, maxLength: 255 },
+  { name: 'type', label: 'Type', type: 'select', required: true, options: MANUFACTURER_TYPES },
+  { name: 'licenceNumber', label: 'Drug licence number', maxLength: 64, pattern: /^[A-Za-z0-9/\-. ]*$/, patternMessage: 'Licence number may contain only letters, digits, spaces and / - .' },
+  { name: 'contactPerson', label: 'Contact person', maxLength: 255 },
   { name: 'phone', label: 'Phone', type: 'tel', maxLength: 20, pattern: /^\+?[0-9(][0-9 ()\-.]{5,19}$/, patternMessage: 'Phone must be a phone number (digits, spaces, +, -, (, ), .)' },
   { name: 'email', label: 'Email', type: 'email', maxLength: 255 },
   { name: 'address', label: 'Address', type: 'textarea', maxLength: 500 },
@@ -30,6 +33,9 @@ const MANUFACTURER_FIELDS: FieldSpec[] = [
 function toRequest(values: FormValues): ManufacturerRequest {
   return {
     name: (values.name ?? '').trim(),
+    type: (values.type || 'MANUFACTURER') as ManufacturerType,
+    licenceNumber: blankToNull(values.licenceNumber),
+    contactPerson: blankToNull(values.contactPerson),
     address: blankToNull(values.address),
     phone: blankToNull(values.phone),
     email: blankToNull(values.email),
@@ -43,7 +49,7 @@ function toRequest(values: FormValues): ManufacturerRequest {
 export function ManufacturerForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [values, setValues] = useState<FormValues>(() => emptyValues(MANUFACTURER_FIELDS));
+  const [values, setValues] = useState<FormValues>(() => ({ ...emptyValues(MANUFACTURER_FIELDS), type: 'MANUFACTURER' }));
   const [errors, setErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(Boolean(id));

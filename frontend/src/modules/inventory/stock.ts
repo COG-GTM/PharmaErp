@@ -25,7 +25,7 @@ export function isExpiringSoon(item: InventoryItem, today?: Date): boolean {
   if (!item.expiryDate) return false;
   const days = daysUntil(item.expiryDate, today);
   if (days === null || days < 0) return false;
-  return item.expiringSoon ?? days <= EXPIRY_WINDOW_DAYS;
+  return days <= EXPIRY_WINDOW_DAYS;
 }
 
 export function isExpired(item: InventoryItem, today?: Date): boolean {
@@ -35,7 +35,9 @@ export function isExpired(item: InventoryItem, today?: Date): boolean {
 }
 
 export function isLowStock(item: InventoryItem): boolean {
-  return item.lowStock ?? item.quantity <= LOW_STOCK_THRESHOLD;
+  if (item.stockStatus === 'LOW' || item.stockStatus === 'OUT_OF_STOCK') return true;
+  if (item.stockStatus) return false;
+  return item.quantity <= (item.reorderLevel ?? LOW_STOCK_THRESHOLD);
 }
 
 export function stockBadges(item: InventoryItem, today?: Date): StockBadge[] {

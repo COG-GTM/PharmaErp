@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { invoicesApi, type Invoice, type Payment } from './api';
+import { invoicesApi, type Invoice, type Option, type Payment } from './api';
 import { GstBreakdown } from './GstBreakdown';
 import { errorMessage } from './forms';
 import { formatInr, summarizeAmounts } from './gst';
+
+const nameOf = (options: Option[], id: number) => options.find((o) => o.id === id)?.name;
 
 /** Printable e-receipt for an invoice (use case "E-receipt"). */
 export function InvoiceReceipt() {
@@ -12,6 +14,8 @@ export function InvoiceReceipt() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentsFailed, setPaymentsFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<Option[]>([]);
+  const [stores, setStores] = useState<Option[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -19,6 +23,9 @@ export function InvoiceReceipt() {
       .get(id)
       .then((inv) => active && setInvoice(inv))
       .catch((err: unknown) => active && setError(errorMessage(err)));
+    // Names are cosmetic; the receipt falls back to ids when a lookup is unavailable.
+    invoicesApi.clients().then((c) => active && setClients(c)).catch(() => undefined);
+    invoicesApi.stores().then((s) => active && setStores(s)).catch(() => undefined);
     // Payments are optional on the receipt (the payments module may not be deployed).
     invoicesApi
       .payments(id)
@@ -42,20 +49,19 @@ export function InvoiceReceipt() {
   if (!invoice) return <p>Loading e-receipt…</p>;
 
   const fromLines = summarizeAmounts(
-    invoice.lines.map((l) => ({ gstRate: l.gstRate, taxable: l.lineTotal - l.gstAmount, gst: l.gstAmount })),
+    invoice.lines.map((l) => ({ gstRate: l.gstRate, taxable: l.taxableAmount, gst: l.gstAmount })),
   );
   // Saved header totals are authoritative; per-rate rows come from the saved lines.
-  const cgst = Math.round((invoice.gstAmount * 100) / 2) / 100;
   const summary = {
     ...fromLines,
     subtotal: invoice.subtotal,
     gst: invoice.gstAmount,
-    cgst,
-    sgst: Math.round((invoice.gstAmount - cgst) * 100) / 100,
+    cgst: invoice.cgstAmount,
+    sgst: invoice.sgstAmount,
     total: invoice.totalAmount,
   };
   const linesDiffer = Math.round(fromLines.total * 100) !== Math.round(invoice.totalAmount * 100);
-  const balance = Math.round((invoice.totalAmount - invoice.paidAmount) * 100) / 100;
+  const balance = invoice.balanceDue;
 
   return (
     <section className="card receipt" aria-label="E-receipt">
@@ -77,11 +83,11 @@ export function InvoiceReceipt() {
         </div>
         <div>
           <strong>Billed to</strong>
-          <div>{invoice.clientName ?? (invoice.clientId ? `Client #${invoice.clientId}` : 'Walk-in customer')}</div>
+          <div>{invoice.clientId ? (nameOf(clients, invoice.clientId) ?? `Client #${invoice.clientId}`) : 'Walk-in customer'}</div>
         </div>
         <div>
           <strong>Store</strong>
-          <div>{invoice.storeName ?? (invoice.storeId ? `Store #${invoice.storeId}` : '—')}</div>
+          <div>{invoice.storeId ? (nameOf(stores, invoice.storeId) ?? `Store #${invoice.storeId}`) : '—'}</div>
         </div>
         <div>
           <strong>Status</strong>
@@ -90,7 +96,7 @@ export function InvoiceReceipt() {
           </div>
         </div>
       </div>
-      {invoice.invoiceDescription && <p>{invoice.invoiceDescription}</p>}
+      {invoice.description && <p>{invoice.description}</p>}
       <table>
         <thead>
           <tr>
@@ -154,7 +160,7 @@ export function InvoiceReceipt() {
                   <td>{p.receiptNumber}</td>
                   <td>{p.paidAt}</td>
                   <td>{p.paymentType}</td>
-                  <td className="num">{formatInr(p.paymentAmount)}</td>
+                  <td className="num">{formatInr(p.amount)}</td>
                 </tr>
               ))}
             </tbody>

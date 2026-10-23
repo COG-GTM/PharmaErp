@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { PageResponse } from '../../api/client';
-import { invoicesApi, type Invoice } from './api';
+import { invoicesApi, type InvoiceSummary, type Option } from './api';
 import { errorMessage } from './forms';
 import { formatInr } from './gst';
 
 export function InvoicesList() {
   const [page, setPage] = useState(0);
-  const [data, setData] = useState<PageResponse<Invoice> | null>(null);
+  const [data, setData] = useState<PageResponse<InvoiceSummary> | null>(null);
+  const [clients, setClients] = useState<Option[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    invoicesApi.clients().then((c) => active && setClients(c)).catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,7 +70,7 @@ export function InvoicesList() {
               <tr key={inv.id}>
                 <td>{inv.invoiceNumber}</td>
                 <td>{inv.invoiceDate}</td>
-                <td>{inv.clientName ?? (inv.clientId ? `#${inv.clientId}` : 'Walk-in')}</td>
+                <td>{inv.clientId ? (clients.find((c) => c.id === inv.clientId)?.name ?? `#${inv.clientId}`) : 'Walk-in'}</td>
                 <td>
                   <span className="badge badge-muted">{inv.status}</span>
                 </td>

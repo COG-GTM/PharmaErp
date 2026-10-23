@@ -26,9 +26,8 @@ const base: InventoryItem = {
   hsnCode: '3004',
   barcode: '8901234567890',
   manufacturerId: 5,
-  manufacturerName: 'Sun Labs',
   storeId: 2,
-  storeName: 'Central Store',
+  reorderLevel: 10,
 };
 const expiring: InventoryItem = { ...base, id: 2, name: 'Amoxicillin 250mg', expiryDate: isoInDays(10) };
 const low: InventoryItem = { ...base, id: 3, name: 'Insulin pen', quantity: 4 };
@@ -61,12 +60,10 @@ describe('stock rules', () => {
     ]);
   });
 
-  it('prefers server flags when present', () => {
-    expect(stockBadges({ ...base, lowStock: true, expiringSoon: true }).map((b) => b.label)).toEqual([
-      'Expires in 400 days',
-      'Low stock',
-    ]);
-    expect(stockBadges({ ...low, lowStock: false })).toEqual([]);
+  it('prefers the server stock status and reorder level when present', () => {
+    expect(stockBadges({ ...base, stockStatus: 'LOW' }).map((b) => b.label)).toEqual(['Low stock']);
+    expect(stockBadges({ ...low, stockStatus: 'IN_STOCK' })).toEqual([]);
+    expect(stockBadges({ ...base, quantity: 40, reorderLevel: 50 }).map((b) => b.label)).toEqual(['Low stock']);
   });
 
   it('filters locally for expiring-soon and low-stock', () => {
@@ -85,7 +82,7 @@ describe('inventory module', () => {
   it('lists items with expiry and stock badges', async () => {
     mockApi(({ url }) => {
       if (url.startsWith('/api/stores')) return { body: page([{ id: 2, name: 'Central Store' }]) };
-      return { body: page([base, expiring, { ...low, manufacturerName: undefined, manufacturerId: 6 }, expired]) };
+      return { body: page([base, expiring, { ...low, manufacturerId: 6 }, expired]) };
     });
     renderAt('/inventory');
 
@@ -104,14 +101,14 @@ describe('inventory module', () => {
     await screen.findByTestId('item-1');
 
     await userEvent.click(screen.getByRole('button', { name: /Expiring soon/ }));
-    await waitFor(() => expect(calls.at(-1)?.url).toContain('expiringWithinDays=30'));
+    await waitFor(() => expect(calls.at(-1)?.url).toMatch(/^\/api\/inventory\/expiring\?days=30&/));
     expect(screen.getByRole('button', { name: /Expiring soon/ })).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() => expect(screen.queryByTestId('item-1')).not.toBeInTheDocument());
     expect(screen.getByTestId('item-2')).toBeInTheDocument();
     expect(screen.queryByTestId('item-3')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /Low stock/ }));
-    await waitFor(() => expect(calls.at(-1)?.url).toContain('lowStockThreshold=10'));
+    await waitFor(() => expect(calls.at(-1)?.url).toMatch(/^\/api\/inventory\/low-stock\?page=0/));
     await waitFor(() => expect(screen.queryByTestId('item-2')).not.toBeInTheDocument());
     expect(screen.getByTestId('item-3')).toBeInTheDocument();
   });
@@ -120,12 +117,12 @@ describe('inventory module', () => {
     const { calls } = mockApi(() => ({ body: page([low]) }));
     renderAt('/inventory?filter=low-stock');
     expect(await screen.findByTestId('item-3')).toBeInTheDocument();
-    expect(calls.find((c) => c.url.startsWith('/api/inventory-items'))?.url).toContain('lowStockThreshold=10');
+    expect(calls.find((c) => c.url.startsWith('/api/inventory/'))?.url).toMatch(/^\/api\/inventory\/low-stock\?/);
   });
 
   it('filters each page locally and says so when results span several pages', async () => {
     mockApi(({ url }) =>
-      url.startsWith('/api/inventory-items') ? { body: { ...page([base, low]), totalPages: 2, totalElements: 21 } } : { body: page([]) },
+      url.startsWith('/api/inventory') ? { body: { ...page([base, low]), totalPages: 2, totalElements: 21 } } : { body: page([]) },
     );
     renderAt('/inventory?filter=low-stock');
     expect(await screen.findByTestId('item-3')).toBeInTheDocument();
@@ -155,7 +152,7 @@ describe('inventory module', () => {
 
     await screen.findByRole('heading', { name: 'Inventory' });
     expect(calls.find((c) => c.method === 'POST')).toMatchObject({
-      url: '/api/inventory-items',
+      url: '/api/inventory',
       body: {
         name: 'Paracetamol 500mg',
         batchNo: 'B-100',
@@ -187,7 +184,7 @@ describe('inventory module', () => {
   it('edits an existing item', async () => {
     const { calls } = mockApi(({ method, url }) => {
       if (method === 'PUT') return { body: low };
-      if (url === '/api/inventory-items/3') return { body: low };
+      if (url === '/api/inventory/3') return { body: low };
       return { body: page([]) };
     });
     renderAt('/inventory/3/edit');
@@ -198,6 +195,6 @@ describe('inventory module', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save item' }));
 
     await screen.findByRole('heading', { name: 'Inventory' });
-    expect(calls.find((c) => c.method === 'PUT')).toMatchObject({ url: '/api/inventory-items/3', body: { quantity: 50, storeId: 2 } });
+    expect(calls.find((c) => c.method === 'PUT')).toMatchObject({ url: '/api/inventory/3', body: { quantity: 50, storeId: 2 } });
   });
 });

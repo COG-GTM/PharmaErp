@@ -54,6 +54,14 @@ export function SpecFields({
           <FormField key={s.name} name={s.name} label={s.label} errors={errors}>
             {s.type === 'textarea' ? (
               <textarea {...common} onChange={(e) => onChange(s.name, e.target.value)} />
+            ) : s.type === 'select' ? (
+              <select {...common} onChange={(e) => onChange(s.name, e.target.value)}>
+                {(s.options ?? []).map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             ) : (
               <input
                 {...common}

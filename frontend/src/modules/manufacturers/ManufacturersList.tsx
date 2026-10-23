@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { PageResponse } from '../../api/client';
-import { manufacturersApi, type Manufacturer } from './api';
+import { MANUFACTURER_TYPES, manufacturersApi, type Manufacturer } from './api';
 import { errorMessage } from './forms';
 
 export function ManufacturersList() {
@@ -57,6 +57,7 @@ export function ManufacturersList() {
           <thead>
             <tr>
               <th>Name</th>
+              <th>Type</th>
               <th>Phone</th>
               <th>Email</th>
               <th>City</th>
@@ -68,6 +69,7 @@ export function ManufacturersList() {
             {data.content.map((c) => (
               <tr key={c.id}>
                 <td>{c.name}</td>
+                <td>{MANUFACTURER_TYPES.find((t) => t.value === c.type)?.label ?? c.type}</td>
                 <td>{c.phone}</td>
                 <td>{c.email}</td>
                 <td>{c.city}</td>
