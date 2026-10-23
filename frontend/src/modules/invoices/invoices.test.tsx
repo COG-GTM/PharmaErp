@@ -6,6 +6,7 @@ import { renderWithProviders } from '../../test/utils';
 import invoices from './index';
 import type { Invoice } from './api';
 import { formatInr, lineAmounts, summarize } from './gst';
+import { fetchAll } from './lookup';
 import { mockApi, page } from './testing';
 
 const invoice: Invoice = {
@@ -19,11 +20,11 @@ const invoice: Invoice = {
   invoiceDate: '2026-10-20',
   invoiceDescription: 'Monthly supply',
   subtotal: 450,
-  gstAmount: 37.5,
-  totalAmount: 487.5,
+  gstAmount: 39.99,
+  totalAmount: 489.99,
   paidAmount: 200,
   lines: [
-    { id: 1, itemId: 1, description: 'Paracetamol 500mg', quantity: 100, unitPrice: 2.5, gstRate: 12, gstAmount: 30, lineTotal: 280 },
+    { id: 1, itemId: 1, description: 'Paracetamol 500mg', quantity: 100, unitPrice: 2.5, gstRate: 12, gstAmount: 29.99, lineTotal: 279.99 },
     { id: 2, itemId: null, description: 'Bandage roll', quantity: 10, unitPrice: 20, gstRate: 5, gstAmount: 10, lineTotal: 210 },
   ],
 };
@@ -168,10 +169,24 @@ describe('invoices module', () => {
     expect(await screen.findByRole('heading', { name: 'E-receipt · INV-2026-0007' })).toBeInTheDocument();
     expect(screen.getByText('City Hospital')).toBeInTheDocument();
     expect(await screen.findByText('RCPT-0009')).toBeInTheDocument();
-    expect(digits(screen.getByTestId('summary-total').textContent)).toBe('487.50');
-    expect(digits(screen.getByTestId('receipt-balance').textContent)).toBe('287.50');
-    expect(screen.getByTestId('receipt-balance').textContent).toContain(formatInr(287.5));
+    // Breakdown uses the persisted line GST (29.99 + 10.00), not a recalculation (30 + 10).
+    expect(digits(screen.getByTestId('summary-gst').textContent)).toBe('39.99');
+    expect(digits(screen.getByTestId('summary-cgst').textContent)).toBe('20.00');
+    expect(digits(screen.getByTestId('summary-sgst').textContent)).toBe('19.99');
+    expect(digits(screen.getByTestId('summary-total').textContent)).toBe('489.99');
+    expect(digits(screen.getByTestId('receipt-balance').textContent)).toBe('289.99');
+    expect(screen.getByTestId('receipt-balance').textContent).toContain(formatInr(289.99));
     await waitFor(() => expect(calls.some((c) => c.url.startsWith('/api/payments?invoiceId=7'))).toBe(true));
+  });
+
+  it('loads every page of a lookup endpoint', async () => {
+    const { calls } = mockApi(({ url }) => {
+      const p = Number(new URL(url, 'http://x').searchParams.get('page'));
+      return { body: { content: [{ id: p + 1, name: `Client ${p + 1}` }], page: p, size: 200, totalElements: 3, totalPages: 3 } };
+    });
+    const all = await fetchAll<{ id: number }>('/api/clients', 'name');
+    expect(all.map((c) => c.id)).toEqual([1, 2, 3]);
+    expect(calls).toHaveLength(3);
   });
 
   it('still renders the e-receipt when payments are unavailable', async () => {

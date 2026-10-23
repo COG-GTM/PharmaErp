@@ -45,7 +45,11 @@ export function InventoryList() {
     inventoryApi
       .list({ q: search, filter, page })
       .then((res) => active && setData(res))
-      .catch((err: unknown) => active && setError(errorMessage(err)));
+      .catch((err: unknown) => {
+        if (!active) return;
+        setData(null);
+        setError(errorMessage(err));
+      });
     return () => {
       active = false;
     };
@@ -62,7 +66,9 @@ export function InventoryList() {
     setParams(next === 'all' ? {} : { filter: next }, { replace: true });
   };
 
-  const rows = data ? applyFilter(data.content, filter) : [];
+  // Client-side filtering is only a safety net when the full result fits on one page;
+  // across multiple pages the server-side filter is authoritative.
+  const rows = !data ? [] : data.totalPages <= 1 ? applyFilter(data.content, filter) : data.content;
 
   return (
     <section className="card">

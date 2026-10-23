@@ -123,6 +123,15 @@ describe('inventory module', () => {
     expect(calls.find((c) => c.url.startsWith('/api/inventory-items'))?.url).toContain('lowStockThreshold=10');
   });
 
+  it('trusts the server filter when results span several pages', async () => {
+    mockApi(({ url }) =>
+      url.startsWith('/api/inventory-items') ? { body: { ...page([base, low]), totalPages: 2, totalElements: 21 } } : { body: page([]) },
+    );
+    renderAt('/inventory?filter=low-stock');
+    expect(await screen.findByTestId('item-3')).toBeInTheDocument();
+    expect(screen.getByTestId('item-1')).toBeInTheDocument();
+  });
+
   it('creates an item with manufacturer and store', async () => {
     const { calls } = mockApi(({ method, url }) => {
       if (url.startsWith('/api/manufacturers')) return { body: page([{ id: 5, name: 'Sun Labs' }]) };

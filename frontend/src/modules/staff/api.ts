@@ -1,4 +1,5 @@
 import { api, type PageResponse } from '../../api/client';
+import { fetchAll } from './lookup';
 
 /** REST contract of the staff backend (T03, StaffRequest/StaffResponse). Adjust here if the backend differs. */
 export const STAFF_PATH = '/api/staff';
@@ -54,19 +55,15 @@ export interface StoreOption {
   name: string;
 }
 
-const ALL = { page: 0, size: 200 };
-
 export const staffApi = {
   list: ({ q, page = 0, size = 20 }: { q?: string; page?: number; size?: number } = {}) =>
     api.get<PageResponse<Staff>>(STAFF_PATH, { query: { q: q || undefined, page, size, sort: 'firstName' } }),
   get: (id: number | string) => api.get<Staff>(`${STAFF_PATH}/${id}`),
   create: (body: StaffRequest) => api.post<Staff>(STAFF_PATH, body),
   update: (id: number | string, body: StaffRequest) => api.put<Staff>(`${STAFF_PATH}/${id}`, body),
-  loginTypes: () => api.get<PageResponse<LoginType>>(LOGIN_TYPES_PATH, { query: { ...ALL, sort: 'name' } }).then((p) => p.content),
+  loginTypes: () => fetchAll<LoginType>(LOGIN_TYPES_PATH, 'name'),
   stores: () =>
-    api
-      .get<PageResponse<StoreOption>>(STORES_PATH, { query: { ...ALL, sort: 'name' } })
-      .then((p) => p.content.map((s): StoreOption => ({ id: s.id, name: s.name }))),
+    fetchAll<StoreOption>(STORES_PATH, 'name').then((all) => all.map((s): StoreOption => ({ id: s.id, name: s.name }))),
 };
 
 export function fullName(s: Pick<Staff, 'firstName' | 'middleName' | 'lastName'> & { fullName?: string }): string {

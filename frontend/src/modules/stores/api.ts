@@ -1,4 +1,5 @@
 import { api, type PageResponse } from '../../api/client';
+import { fetchAll } from './lookup';
 
 /** REST contract of the stores backend (T04, StoreRequest/StoreResponse). Adjust here if the backend differs. */
 export const STORES_PATH = '/api/stores';
@@ -28,7 +29,5 @@ export const storesApi = {
   create: (body: StoreRequest) => api.post<Store>(STORES_PATH, body),
   update: (id: number | string, body: StoreRequest) => api.put<Store>(`${STORES_PATH}/${id}`, body),
   managers: () =>
-    api
-      .get<PageResponse<ManagerOption>>(STAFF_PATH, { query: { page: 0, size: 200, sort: 'firstName' } })
-      .then((p) => p.content.map((s): ManagerOption => ({ id: s.id, fullName: s.fullName }))),
+    fetchAll<ManagerOption>(STAFF_PATH, 'firstName').then((all) => all.map((s): ManagerOption => ({ id: s.id, fullName: s.fullName }))),
 };

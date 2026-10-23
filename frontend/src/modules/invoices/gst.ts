@@ -53,11 +53,19 @@ export function lineAmounts(line: LineInput): LineAmounts {
 }
 
 export function summarize(lines: LineInput[]): GstSummary {
+  return summarizePaise(lines.map((line) => ({ gstRate: line.gstRate, ...linePaise(line) })));
+}
+
+/** Breakdown from amounts already calculated by the server (e.g. a persisted invoice). */
+export function summarizeAmounts(lines: { gstRate: number; taxable: number; gst: number }[]): GstSummary {
+  return summarizePaise(lines.map((l) => ({ gstRate: l.gstRate, taxable: toPaise(l.taxable), gst: toPaise(l.gst) })));
+}
+
+function summarizePaise(lines: { gstRate: number; taxable: number; gst: number }[]): GstSummary {
   const byRate = new Map<number, { taxable: number; gst: number }>();
-  for (const line of lines) {
-    const { taxable, gst } = linePaise(line);
-    const acc = byRate.get(line.gstRate) ?? { taxable: 0, gst: 0 };
-    byRate.set(line.gstRate, { taxable: acc.taxable + taxable, gst: acc.gst + gst });
+  for (const { gstRate, taxable, gst } of lines) {
+    const acc = byRate.get(gstRate) ?? { taxable: 0, gst: 0 };
+    byRate.set(gstRate, { taxable: acc.taxable + taxable, gst: acc.gst + gst });
   }
   let subtotal = 0;
   let gst = 0;

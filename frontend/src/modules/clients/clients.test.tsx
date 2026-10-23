@@ -55,6 +55,18 @@ describe('clients module', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Database unavailable');
   });
 
+  it('drops stale rows when a later search fails', async () => {
+    mockApi(({ url }) =>
+      url.includes('q=beta') ? { status: 500, body: { status: 500, detail: 'Search failed' } } : { body: page([acme]) },
+    );
+    renderAt('/clients');
+    expect(await screen.findByText('Acme Pharmacy')).toBeInTheDocument();
+    await userEvent.type(screen.getByRole('textbox', { name: 'Search clients' }), 'beta');
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Search failed');
+    expect(screen.queryByText('Acme Pharmacy')).not.toBeInTheDocument();
+  });
+
   it('creates a client and returns to the list', async () => {
     const { calls } = mockApi(({ method }) => (method === 'POST' ? { status: 201, body: acme } : { body: page([acme]) }));
     renderAt('/clients/new');

@@ -1,4 +1,5 @@
 import { api, type PageResponse } from '../../api/client';
+import { fetchAll } from './lookup';
 
 /** REST contract of the inventory backend (T07). Adjust here if the backend differs. */
 export const INVENTORY_PATH = '/api/inventory-items';
@@ -80,11 +81,7 @@ export const inventoryApi = {
   create: (body: InventoryItemRequest) => api.post<InventoryItem>(INVENTORY_PATH, body),
   update: (id: number | string, body: InventoryItemRequest) => api.put<InventoryItem>(`${INVENTORY_PATH}/${id}`, body),
   manufacturers: () =>
-    api
-      .get<PageResponse<Option>>(MANUFACTURERS_PATH, { query: { page: 0, size: 200, sort: 'name' } })
-      .then((p) => p.content.map((m): Option => ({ id: m.id, name: m.name }))),
+    fetchAll<Option>(MANUFACTURERS_PATH, 'name').then((all) => all.map((m): Option => ({ id: m.id, name: m.name }))),
   stores: () =>
-    api
-      .get<PageResponse<Option>>(STORES_PATH, { query: { page: 0, size: 200, sort: 'name' } })
-      .then((p) => p.content.map((s): Option => ({ id: s.id, name: s.name }))),
+    fetchAll<Option>(STORES_PATH, 'name').then((all) => all.map((s): Option => ({ id: s.id, name: s.name }))),
 };

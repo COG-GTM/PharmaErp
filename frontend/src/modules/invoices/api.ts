@@ -1,4 +1,5 @@
 import { api, type PageResponse } from '../../api/client';
+import { fetchAll } from './lookup';
 
 /** REST contract of the finance backend (T08). Adjust here if the backend differs. */
 export const INVOICES_PATH = '/api/invoices';
@@ -74,31 +75,23 @@ export interface ItemOption extends Option {
   quantity: number;
 }
 
-const ALL = { page: 0, size: 200 };
-
 export const invoicesApi = {
   list: ({ page = 0, size = 20 }: { page?: number; size?: number } = {}) =>
     api.get<PageResponse<Invoice>>(INVOICES_PATH, { query: { page, size, sort: 'invoiceDate,desc' } }),
   get: (id: number | string) => api.get<Invoice>(`${INVOICES_PATH}/${id}`),
   create: (body: CreateInvoiceRequest) => api.post<Invoice>(INVOICES_PATH, body),
   payments: (invoiceId: number | string) =>
-    api.get<PageResponse<Payment>>(PAYMENTS_PATH, { query: { invoiceId, ...ALL } }).then((p) => p.content),
+    fetchAll<Payment>(PAYMENTS_PATH, 'paidAt', { invoiceId }),
   clients: () =>
-    api
-      .get<PageResponse<Option>>(CLIENTS_PATH, { query: { ...ALL, sort: 'name' } })
-      .then((p) => p.content.map((c): Option => ({ id: c.id, name: c.name }))),
+    fetchAll<Option>(CLIENTS_PATH, 'name').then((all) => all.map((c): Option => ({ id: c.id, name: c.name }))),
   stores: () =>
-    api
-      .get<PageResponse<Option>>(STORES_PATH, { query: { ...ALL, sort: 'name' } })
-      .then((p) => p.content.map((s): Option => ({ id: s.id, name: s.name }))),
+    fetchAll<Option>(STORES_PATH, 'name').then((all) => all.map((s): Option => ({ id: s.id, name: s.name }))),
   items: () =>
-    api
-      .get<PageResponse<{ id: number; name: string; batchNo: string | null; unitPrice: number | null; gstRate: number | null; quantity: number }>>(
-        INVENTORY_PATH,
-        { query: { ...ALL, sort: 'name' } },
-      )
-      .then((p) =>
-        p.content.map(
+    fetchAll<{ id: number; name: string; batchNo: string | null; unitPrice: number | null; gstRate: number | null; quantity: number }>(
+      INVENTORY_PATH,
+      'name',
+    ).then((all) =>
+        all.map(
           (i): ItemOption => ({
             id: i.id,
             name: i.batchNo ? `${i.name} (${i.batchNo})` : i.name,

@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { invoicesApi, type Invoice, type Payment } from './api';
 import { GstBreakdown } from './GstBreakdown';
 import { errorMessage } from './forms';
-import { formatInr, summarize } from './gst';
+import { formatInr, summarizeAmounts } from './gst';
 
 /** Printable e-receipt for an invoice (use case "E-receipt"). */
 export function InvoiceReceipt() {
@@ -40,7 +40,9 @@ export function InvoiceReceipt() {
   }
   if (!invoice) return <p>Loading e-receipt…</p>;
 
-  const summary = summarize(invoice.lines);
+  const summary = summarizeAmounts(
+    invoice.lines.map((l) => ({ gstRate: l.gstRate, taxable: l.lineTotal - l.gstAmount, gst: l.gstAmount })),
+  );
   const balance = Math.round((invoice.totalAmount - invoice.paidAmount) * 100) / 100;
 
   return (
@@ -103,7 +105,7 @@ export function InvoiceReceipt() {
           ))}
         </tbody>
       </table>
-      <GstBreakdown summary={{ ...summary, subtotal: invoice.subtotal, gst: invoice.gstAmount, total: invoice.totalAmount }} />
+      <GstBreakdown summary={summary} />
       <dl className="totals">
         <dt>Paid</dt>
         <dd data-testid="receipt-paid">{formatInr(invoice.paidAmount)}</dd>

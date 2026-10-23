@@ -17,7 +17,11 @@ export function ManufacturersList() {
     manufacturersApi
       .list({ q: search, page })
       .then((res) => active && setData(res))
-      .catch((err: unknown) => active && setError(errorMessage(err)));
+      .catch((err: unknown) => {
+        if (!active) return;
+        setData(null);
+        setError(errorMessage(err));
+      });
     return () => {
       active = false;
     };
