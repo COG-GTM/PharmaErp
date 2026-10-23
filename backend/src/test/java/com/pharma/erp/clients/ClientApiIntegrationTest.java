@@ -2,7 +2,6 @@ package com.pharma.erp.clients;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -204,7 +203,7 @@ class ClientApiIntegrationTest extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"rating\": 5, \"comment\": \"  Excellent service  \"}"))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", endsWith("/api/clients/" + id + "/feedback")))
+                .andExpect(header().string("Location", containsString("/api/clients/" + id + "/feedback/")))
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.clientId").value(id))
                 .andExpect(jsonPath("$.rating").value(5))
@@ -223,6 +222,30 @@ class ClientApiIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.clientId").value(id))
                 .andExpect(jsonPath("$.count").value(2))
                 .andExpect(jsonPath("$.averageRating").value(3.5));
+    }
+
+    @Test
+    void createdFeedbackLocationResolvesToThatFeedbackOnly() throws Exception {
+        int id = createClient(unique("FeedbackLocation"), null);
+        int other = createClient(unique("FeedbackOther"), null);
+        String location = mockMvc.perform(post("/api/clients/{id}/feedback", id).with(bearer(USER))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"rating\": 4, \"comment\": \"Prompt\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getHeader("Location");
+        int feedbackId = Integer.parseInt(location.substring(location.lastIndexOf('/') + 1));
+        assertThat(location).endsWith("/api/clients/" + id + "/feedback/" + feedbackId);
+
+        mockMvc.perform(get(location).with(bearer(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(feedbackId))
+                .andExpect(jsonPath("$.clientId").value(id))
+                .andExpect(jsonPath("$.rating").value(4))
+                .andExpect(jsonPath("$.comment").value("Prompt"));
+        mockMvc.perform(get("/api/clients/{id}/feedback/{fid}", other, feedbackId).with(bearer(USER)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+        mockMvc.perform(get("/api/clients/{id}/feedback/{fid}", id, Integer.MAX_VALUE).with(bearer(USER)))
+                .andExpect(status().isNotFound());
     }
 
     @Test

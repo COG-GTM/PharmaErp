@@ -1,5 +1,6 @@
 package com.pharma.erp.clients;
 
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface ClientFeedbackRepository extends JpaRepository<ClientFeedback, Integer> {
 
     Page<ClientFeedback> findByClientId(Integer clientId, Pageable pageable);
+
+    Optional<ClientFeedback> findByIdAndClientId(Integer id, Integer clientId);
 
     long countByClientId(Integer clientId);
 

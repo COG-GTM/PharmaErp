@@ -80,6 +80,14 @@ public class ClientService {
     }
 
     @Transactional(readOnly = true)
+    public FeedbackResponse getFeedback(Integer clientId, Integer feedbackId) {
+        load(clientId);
+        return feedback.findByIdAndClientId(feedbackId, clientId)
+                .map(FeedbackResponse::from)
+                .orElseThrow(() -> NotFoundException.of("Feedback", feedbackId));
+    }
+
+    @Transactional(readOnly = true)
     public PageResponse<FeedbackResponse> listFeedback(Integer clientId, Pageable pageable) {
         load(clientId);
         requireSortable(pageable, FEEDBACK_SORT_PROPERTIES);

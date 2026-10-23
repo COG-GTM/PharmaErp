@@ -67,8 +67,14 @@ public class ClientController {
     public ResponseEntity<FeedbackResponse> addFeedback(
             @PathVariable Integer id, @Valid @RequestBody FeedbackRequest request) {
         FeedbackResponse created = service.addFeedback(id, request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{feedbackId}").buildAndExpand(created.id()).toUri();
         return ResponseEntity.created(location).body(created);
+    }
+
+    @GetMapping("/{id}/feedback/{feedbackId}")
+    public FeedbackResponse getFeedback(@PathVariable Integer id, @PathVariable Integer feedbackId) {
+        return service.getFeedback(id, feedbackId);
     }
 
     @GetMapping("/{id}/feedback")
