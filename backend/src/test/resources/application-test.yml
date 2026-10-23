@@ -4,3 +4,7 @@ spring:
 logging:
   level:
     org.testcontainers: INFO
+pharma:
+  auth:
+    # Module tests mint tokens for ad-hoc usernames; DeletedAccountTokenIntegrationTest re-enables the check.
+    reject-deleted-accounts: false

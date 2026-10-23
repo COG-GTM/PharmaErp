@@ -13,4 +13,9 @@ interface AuthUserRepository extends JpaRepository<AuthUser, String> {
      */
     @Query("select u from AuthUser u where u.username = :username")
     Optional<AuthUser> findStoredByUsername(@Param("username") String username);
+
+    /** Counts accounts named {@code username} that already existed at {@code issuedAtEpochSecond}. */
+    @Query(value = "select count(*) from `user` where username = :username"
+            + " and unix_timestamp(created_at) <= :issuedAt", nativeQuery = true)
+    long countCreatedAtOrBefore(@Param("username") String username, @Param("issuedAt") long issuedAtEpochSecond);
 }

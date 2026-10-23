@@ -2,6 +2,7 @@ package com.pharma.erp.common.security;
 
 import com.pharma.erp.common.web.ProblemDetailWriter;
 import java.util.List;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,8 +35,8 @@ public class SecurityConfig {
     };
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService, ProblemDetailWriter problems)
-            throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService, ProblemDetailWriter problems,
+            ObjectProvider<TokenAccountChecker> accountChecker) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -50,7 +51,10 @@ public class SecurityConfig {
                                 problems.write(req, res, HttpStatus.UNAUTHORIZED, "Authentication required"))
                         .accessDeniedHandler((req, res, e) ->
                                 problems.write(req, res, HttpStatus.FORBIDDEN, "Access denied")))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(
+                                jwtService, accountChecker.getIfAvailable(() -> TokenAccountChecker.ALLOW_ALL)),
+                        UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

@@ -8,6 +8,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
@@ -20,16 +21,23 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /**
  * Authenticates requests carrying a JWT in {@code Authorization: Bearer} or the {@code token} cookie.
  * The principal is the {@code username} claim; each entry of the space-separated {@code scope} claim
- * becomes a {@code SCOPE_<value>} authority. Invalid tokens are ignored (request stays anonymous).
+ * becomes a {@code SCOPE_<value>} authority. Invalid tokens, and tokens whose account the
+ * {@link TokenAccountChecker} rejects, are ignored (request stays anonymous).
  */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+    private final TokenAccountChecker accountChecker;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
+        this(jwtService, TokenAccountChecker.ALLOW_ALL);
+    }
+
+    public JwtAuthenticationFilter(JwtService jwtService, TokenAccountChecker accountChecker) {
         this.jwtService = jwtService;
+        this.accountChecker = accountChecker;
     }
 
     @Override
@@ -42,6 +50,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = claims.get(JwtService.CLAIM_USERNAME, String.class);
                 if (username == null) {
                     username = claims.getSubject();
+                }
+                Instant issuedAt = claims.getIssuedAt() == null ? null : claims.getIssuedAt().toInstant();
+                if (!accountChecker.isActive(username, issuedAt)) {
+                    logger.debug("Ignoring JWT of inactive account");
+                    chain.doFilter(request, response);
+                    return;
                 }
                 var authentication = new UsernamePasswordAuthenticationToken(username, token, authorities(claims));
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
