@@ -1,13 +1,47 @@
-
+# --- Legacy Gradle 4.4 modules ---
 MainApp/build/
-
 Hibernate/build/
-
 WebClient/build/
 /build/
 Hibernate/out/
-
 PharmaWebClinetIntellij/build/
-
 PharmaWebClinetIntellij/out/
-/Hibernate/.nb-gradle/
+/Hibernate/.nb-gradle/.gitignore
+
+# --- Build output / caches (all modules) ---
+.gradle/
+build/
+out/
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# --- IDEs / OS ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.nb-gradle/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Crash dumps and JVM error logs ---
+/core
+core.[0-9]*
+*.core
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+
+# --- Local environment and secrets (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+keys/
+
+# --- Parity harness scratch output ---
+parity/out/
