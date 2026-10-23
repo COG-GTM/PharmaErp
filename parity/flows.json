@@ -1,0 +1,18 @@
+[
+ {"id": "F01", "name": "Root redirects to login page", "method": "GET", "path": "/"},
+ {"id": "F02", "name": "Login page renders", "method": "GET", "path": "/redirect"},
+ {"id": "F03", "name": "Login success (form POST) returns JWT body + token cookie", "method": "POST", "path": "/login", "form": {"email": "tarang", "password": "parisdkh"}},
+ {"id": "F04", "name": "Login success via GET query string", "method": "GET", "path": "/login", "form": {"email": "tarang", "password": "parisdkh"}},
+ {"id": "F05", "name": "Login wrong password", "method": "POST", "path": "/login", "form": {"email": "tarang", "password": "wrongpass"}},
+ {"id": "F06", "name": "Login unknown user", "method": "POST", "path": "/login", "form": {"email": "nobody", "password": "whatever1"}},
+ {"id": "F07", "name": "Login with no parameters", "method": "POST", "path": "/login"},
+ {"id": "F08", "name": "Login username padded with whitespace is trimmed", "method": "POST", "path": "/login", "form": {"email": "  tarang  ", "password": "parisdkh"}},
+ {"id": "F09", "name": "Password comparison is case-sensitive", "method": "POST", "path": "/login", "form": {"email": "tarang", "password": "PARISDKH"}},
+ {"id": "F10", "name": "Username containing a quote (HQL injection probe)", "method": "POST", "path": "/login", "form": {"email": "x'", "password": "y"}},
+ {"id": "F11", "name": "Classic injection payload does not bypass auth", "method": "POST", "path": "/login", "form": {"email": "tarang' OR '1'='1", "password": "anything"}},
+ {"id": "F12", "name": "Login seeded user pharmacist01", "method": "POST", "path": "/login", "form": {"email": "pharmacist01", "password": "Secure#2024"}},
+ {"id": "F13", "name": "Login seeded user storemgr", "method": "POST", "path": "/login", "form": {"email": "storemgr", "password": "warehouse88"}},
+ {"id": "F14", "name": "Login seeded user accounts", "method": "POST", "path": "/login", "form": {"email": "accounts", "password": "ledger2024"}},
+ {"id": "F15", "name": "Unauthenticated GET /token", "method": "GET", "path": "/token"},
+ {"id": "F16", "name": "Unknown route returns 404", "method": "GET", "path": "/nonexistent"}
+]

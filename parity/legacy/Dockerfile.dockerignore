@@ -1,0 +1,15 @@
+.git
+core
+**/build
+**/out
+.gradle
+**/.gradle
+.idea
+**/.idea
+.nb-gradle
+*.pdf
+*.xlsx
+backend
+frontend
+parity
+**/node_modules
