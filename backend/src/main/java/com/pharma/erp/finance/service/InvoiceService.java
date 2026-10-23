@@ -75,6 +75,10 @@ public class InvoiceService {
             }
             LineAmounts line = GstCalculator.line(lineRequest.quantity(), lineRequest.unitPrice(), lineRequest.gstRate());
             amounts.add(line);
+            if (GstCalculator.exceedsStorage(line.lineTotal())) {
+                addError(errors, field, "line total " + line.lineTotal().toPlainString() + " exceeds the maximum of "
+                        + GstCalculator.MAX_AMOUNT.toPlainString());
+            }
 
             InvoiceLine entity = new InvoiceLine();
             entity.setItemId(lineRequest.itemId());
@@ -86,11 +90,15 @@ public class InvoiceService {
             entity.setLineTotal(line.lineTotal());
             invoice.addLine(entity);
         }
+        InvoiceTotals totals = GstCalculator.totals(amounts);
+        if (GstCalculator.exceedsStorage(totals.total())) {
+            addError(errors, "lines", "invoice total " + totals.total().toPlainString() + " exceeds the maximum of "
+                    + GstCalculator.MAX_AMOUNT.toPlainString());
+        }
         if (!errors.isEmpty()) {
             throw new InvalidReferenceException(errors);
         }
 
-        InvoiceTotals totals = GstCalculator.totals(amounts);
         invoice.setInvoiceNumber(UUID.randomUUID().toString().replace("-", ""));
         invoice.setClientId(request.clientId());
         invoice.setStoreId(request.storeId());

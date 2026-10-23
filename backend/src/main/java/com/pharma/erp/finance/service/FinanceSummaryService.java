@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class FinanceSummaryService {
 
-    static final LocalDate MIN_DATE = LocalDate.of(1900, 1, 1);
+    static final LocalDate MIN_DATE = LocalDate.of(1, 1, 1);
     static final LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
 
     private final InvoiceRepository invoices;

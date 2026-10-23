@@ -219,6 +219,28 @@ class InvoiceApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void rejectsAmountsBeyondColumnCapacity() throws Exception {
+        mockMvc.perform(post("/api/invoices").with(bearer("finance"))
+                        .contentType(MediaType.APPLICATION_JSON).content("""
+                                {"lines": [{"description": "bulk", "quantity": 1000000, "unitPrice": 10000, "gstRate": 0}]}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.errors['lines[0]']").exists());
+
+        mockMvc.perform(post("/api/invoices").with(bearer("finance"))
+                        .contentType(MediaType.APPLICATION_JSON).content("""
+                                {"lines": [
+                                   {"description": "a", "quantity": 1, "unitPrice": 9000000000, "gstRate": 0},
+                                   {"description": "b", "quantity": 1, "unitPrice": 900000000, "gstRate": 18}]}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.lines").exists())
+                .andExpect(jsonPath("$.errors['lines[0]']").doesNotExist())
+                .andExpect(jsonPath("$.errors['lines[1]']").doesNotExist());
+    }
+
+    @Test
     void missingInvoiceIs404() throws Exception {
         mockMvc.perform(get("/api/invoices/{id}", 99999999).with(bearer("finance")))
                 .andExpect(status().isNotFound())

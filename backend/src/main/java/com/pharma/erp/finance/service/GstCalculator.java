@@ -19,6 +19,8 @@ public final class GstCalculator {
     public static final List<BigDecimal> ALLOWED_RATES = List.of(
             new BigDecimal("0"), new BigDecimal("5"), new BigDecimal("12"), new BigDecimal("18"), new BigDecimal("28"));
 
+    /** Largest value a {@code DECIMAL(12,2)} money column can hold. */
+    public static final BigDecimal MAX_AMOUNT = new BigDecimal("9999999999.99");
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final BigDecimal TWO = BigDecimal.valueOf(2);
 
@@ -97,6 +99,10 @@ public final class GstCalculator {
                     a.gstAmount().add(b.gstAmount())));
         }
         return List.copyOf(byRate.values());
+    }
+
+    public static boolean exceedsStorage(BigDecimal amount) {
+        return amount.compareTo(MAX_AMOUNT) > 0;
     }
 
     public static BigDecimal zero() {

@@ -116,6 +116,22 @@ class FinanceSummaryIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void unboundedSummaryIncludesHistoricalEntries() throws Exception {
+        int before = expenseCount();
+        post("/api/expenses", """
+                {"category": "historical", "amount": 10, "expenseDate": "1850-06-15"}
+                """);
+        assertThat(expenseCount()).isEqualTo(before + 1);
+    }
+
+    private int expenseCount() throws Exception {
+        String json = mockMvc.perform(get("/api/finance/summary").with(bearer("finance")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(json, "$.expenses.expenseCount");
+    }
+
+    @Test
     void rejectsInvertedRange() throws Exception {
         mockMvc.perform(get("/api/finance/summary").with(bearer("finance"))
                         .param("from", "2026-02-01").param("to", "2026-01-01"))
