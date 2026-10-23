@@ -111,7 +111,10 @@ class InventoryIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/inventory/{id}", id).with(bearer(USER)))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
-        mockMvc.perform(get("/api/inventory/{id}/movements", id).with(bearer(USER))).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/inventory/{id}/movements", id).with(bearer(USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.content[0].note").value("Archived"));
         adjust(id, 5, "RECEIPT").andExpect(status().isNotFound());
         mockMvc.perform(get("/api/inventory").param("barcode", barcode).with(bearer(USER)))
                 .andExpect(jsonPath("$.totalElements").value(0));

@@ -211,7 +211,7 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public PageResponse<StockMovementResponse> movements(Integer itemId, Pageable pageable) {
-        if (!items.existsByIdAndArchivedAtIsNull(itemId)) {
+        if (!items.existsById(itemId)) {
             throw NotFoundException.of("Inventory item", itemId);
         }
         Map<Integer, String> names = statusNames();

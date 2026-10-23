@@ -18,8 +18,6 @@ public interface InventoryItemRepository
 
     Optional<InventoryItem> findByIdAndArchivedAtIsNull(Integer id);
 
-    boolean existsByIdAndArchivedAtIsNull(Integer id);
-
     @Query("""
             select count(i) > 0 from InventoryItem i
             where i.barcode = :barcode and i.batchNo = :batchNo
