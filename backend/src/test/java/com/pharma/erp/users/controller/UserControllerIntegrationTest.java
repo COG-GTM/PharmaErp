@@ -61,7 +61,7 @@ class UserControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(post("/api/users").with(bearer(ADMIN))
                         .contentType(MediaType.APPLICATION_JSON).content(body(username, "Secure#2024")))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", Matchers.endsWith("/api/users/" + username)))
+                .andExpect(header().string("Location", "http://localhost/api/users/" + username))
                 .andExpect(jsonPath("$.username").value(username))
                 .andExpect(jsonPath("$.password").doesNotExist());
 
