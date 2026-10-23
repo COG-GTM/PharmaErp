@@ -36,8 +36,8 @@ export function InventoryList() {
     };
   }, []);
 
-  const nameOf = (options: Option[], id: number | null, fallback?: string | null) =>
-    id === null ? '' : (fallback ?? options.find((o) => o.id === id)?.name ?? `#${id}`);
+  const nameOf = (options: Option[], id: number | null | undefined, fallback?: string | null) =>
+    id == null ? '' : (fallback ?? options.find((o) => o.id === id)?.name ?? `#${id}`);
 
   useEffect(() => {
     let active = true;

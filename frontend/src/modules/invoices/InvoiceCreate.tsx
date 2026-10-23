@@ -84,8 +84,8 @@ export function InvoiceCreate() {
       itemId,
       ...(item && {
         description: item.itemName,
-        unitPrice: item.unitPrice !== null ? String(item.unitPrice) : '',
-        gstRate: item.gstRate !== null ? String(item.gstRate) : '0',
+        unitPrice: item.unitPrice != null ? String(item.unitPrice) : '',
+        gstRate: item.gstRate != null ? String(item.gstRate) : '0',
       }),
     });
   };

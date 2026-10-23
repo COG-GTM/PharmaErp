@@ -60,7 +60,7 @@ describe('staff module', () => {
     mockApi(
       (call) =>
         lookups(call) ?? {
-          body: page([asha, { ...asha, id: 12, fullName: 'Ravi', firstName: 'Ravi', lastName: null, loginType: null, storeId: 7, active: false, staffType: 'SUPPLIER' }]),
+          body: page([asha, { ...asha, id: 12, fullName: 'Ravi', firstName: 'Ravi', lastName: null, loginType: null, storeId: 7, active: false, staffType: 'SUPPLIER' }, { ...asha, id: 13, fullName: 'Meera', firstName: 'Meera', loginType: null, storeId: undefined as unknown as null }]),
         },
     );
     renderAt('/staff');
@@ -71,6 +71,9 @@ describe('staff module', () => {
     expect(screen.getByText('Manager')).toBeInTheDocument();
     expect(await screen.findByText('Central Store')).toBeInTheDocument();
     expect(screen.getByText('Store #7')).toBeInTheDocument();
+    // The backend omits null fields (non_null inclusion): an absent store must not render as "Store #undefined".
+    expect(await screen.findByText('Meera')).toBeInTheDocument();
+    expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
   });
 
   it('creates a staff member with lookups and typed values', async () => {

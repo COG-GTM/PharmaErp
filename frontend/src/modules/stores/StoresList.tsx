@@ -24,7 +24,7 @@ export function StoresList() {
     };
   }, []);
 
-  const managerName = (id: number | null) => (id === null ? '—' : (managers.find((m) => m.id === id)?.fullName ?? `Staff #${id}`));
+  const managerName = (id: number | null | undefined) => (id == null ? '—' : (managers.find((m) => m.id === id)?.fullName ?? `Staff #${id}`));
 
   useEffect(() => {
     let active = true;
