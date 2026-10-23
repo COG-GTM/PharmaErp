@@ -193,15 +193,13 @@ class AuthApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void tokenDerivesScopeFromTheAccountNotThePresentedToken() throws Exception {
+    void tokenRefusesToRenewScopesTheAccountDoesNotHold() throws Exception {
         String username = newPlaintextUser("Secret#123");
-        String elevated = jwtService.issueToken(username, "superuser");
-
-        MvcResult result = mockMvc.perform(get("/token").header("Authorization", "Bearer " + elevated))
-                .andExpect(status().isOk())
-                .andReturn();
-        String reissued = objectMapper.readValue(result.getResponse().getContentAsString(), String.class);
-        assertThat(payload(reissued).get("scope").asText()).isEqualTo("admin");
+        for (String scope : List.of("superuser", "readonly")) {
+            mockMvc.perform(get("/token").header("Authorization", "Bearer " + jwtService.issueToken(username, scope)))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+        }
     }
 
     @Test

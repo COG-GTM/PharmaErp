@@ -53,12 +53,13 @@ public class AuthService {
     }
 
     /**
-     * Re-issues a token for an already authenticated user, provided the account still exists. The scope is
-     * derived server-side from the account, never copied from the presented token.
+     * Re-issues a token for an already authenticated user, provided the account still exists and still holds the
+     * presented scope. Scopes are never widened or carried over: legacy accounts hold only {@code admin}, so any
+     * other scope is refused rather than renewed.
      */
     @Transactional(readOnly = true)
-    public Optional<IssuedToken> reissue(String username) {
-        if (username == null || findExact(username).isEmpty()) {
+    public Optional<IssuedToken> reissue(String username, String presentedScope) {
+        if (username == null || !LEGACY_SCOPE.equals(presentedScope) || findExact(username).isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(issue(username, LEGACY_SCOPE));
