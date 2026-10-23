@@ -1,0 +1,96 @@
+{
+  "numTotalTests": 121,
+  "numPassedTests": 121,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTotalTestSuites": 39,
+  "success": true,
+  "duration_ms": 5325.41455078125,
+  "files": [
+    {
+      "file": "src/api/client.test.ts",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "src/app/App.test.tsx",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "src/app/Layout.test.tsx",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "src/auth/AuthContext.test.tsx",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "src/auth/LoginPage.test.tsx",
+      "tests": 11,
+      "status": "passed"
+    },
+    {
+      "file": "src/auth/RequireAuth.test.tsx",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "src/auth/authApi.test.ts",
+      "tests": 10,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/registry.test.ts",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/clients/clients.test.tsx",
+      "tests": 7,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/dashboard/DashboardPage.test.tsx",
+      "tests": 7,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/inventory/inventory.test.tsx",
+      "tests": 16,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/health/HealthPage.test.tsx",
+      "tests": 1,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/invoices/invoices.test.tsx",
+      "tests": 14,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/manufacturers/manufacturers.test.tsx",
+      "tests": 6,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/staff/staff.test.tsx",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/stores/stores.test.tsx",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "file": "src/modules/users/users.test.tsx",
+      "tests": 14,
+      "status": "passed"
+    }
+  ]
+}

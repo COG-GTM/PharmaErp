@@ -12,7 +12,9 @@ services:
       - ../seed/legacy-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ../seed/seed-users.sql:/docker-entrypoint-initdb.d/02-seed-users.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin"]
+      # Query over TCP: mysqladmin ping on the socket already succeeds while the init-only server is
+      # running, which let Tomcat start before MySQL accepted TCP connections (Hibernate pool fails once, app 404s).
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -uroot -padmin PHARMA_ERP -e 'SELECT COUNT(*) FROM user' > /dev/null 2>&1"]
       interval: 5s
       timeout: 5s
       retries: 30

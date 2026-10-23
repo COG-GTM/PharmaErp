@@ -1,0 +1,1001 @@
+{
+  "flows": [
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": null
+        },
+        "location": {
+          "legacy": "/redirect",
+          "migrated": "/signin"
+        }
+      },
+      "id": "F01",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": "/redirect",
+        "status": 302,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Root redirects to login page",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        }
+      },
+      "root_cause": "GET / still answers 302, but the target is the SPA sign-in route /signin instead of the JSP /redirect page. Same user outcome: an anonymous visitor lands on the login form.",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "html-login-page",
+          "migrated": "empty"
+        },
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": null
+        },
+        "location": {
+          "legacy": null,
+          "migrated": "/signin"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 302
+        }
+      },
+      "id": "F02",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "html-login-page",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": null,
+        "status": 200,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Login page renders",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        }
+      },
+      "root_cause": "The JSP login page was replaced by the React SPA. The backend keeps /redirect as a legacy-compat route that 302s to the SPA sign-in page (/signin), which the nginx front door serves with 200 (verified by parity/probes.sh).",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "functional_differences": {},
+      "id": "F03",
+      "legacy": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "migrated": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "name": "Login success (form POST) returns JWT body + token cookie",
+      "non_functional_differences": {
+        "jwt.signature_len": {
+          "legacy": [
+            171
+          ],
+          "migrated": [
+            342
+          ]
+        }
+      },
+      "status": "PARITY"
+    },
+    {
+      "functional_differences": {},
+      "id": "F04",
+      "legacy": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "migrated": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "name": "Login success via GET query string",
+      "non_functional_differences": {
+        "jwt.signature_len": {
+          "legacy": [
+            171
+          ],
+          "migrated": [
+            342
+          ]
+        }
+      },
+      "status": "PARITY"
+    },
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "html-login-page",
+          "migrated": "empty"
+        },
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": null
+        },
+        "location": {
+          "legacy": null,
+          "migrated": "/signin?error"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 302
+        }
+      },
+      "id": "F05",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "html-login-page",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": null,
+        "status": 200,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin?error",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Login wrong password",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        }
+      },
+      "root_cause": "Legacy forwarded a failed login to the JSP login page (200). Migrated uses Post/Redirect/Get: 302 to /signin?error. Same outcome: no token, no cookie, back on the login form. Known limitation: the React sign-in page does not read ?error yet, so a failed legacy-style form POST shows the empty form without an error banner (the SPA's own JSON sign-in does show one).",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "html-login-page",
+          "migrated": "empty"
+        },
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": null
+        },
+        "location": {
+          "legacy": null,
+          "migrated": "/signin?error"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 302
+        }
+      },
+      "id": "F06",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "html-login-page",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": null,
+        "status": 200,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin?error",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Login unknown user",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        }
+      },
+      "root_cause": "Same Post/Redirect/Get change as F05. Unknown users and wrong passwords stay indistinguishable (same redirect; AuthService burns one BCrypt check for unknown users so timing does not leak either).",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "html-login-page",
+          "migrated": "empty"
+        },
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": null
+        },
+        "location": {
+          "legacy": null,
+          "migrated": "/signin"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 302
+        }
+      },
+      "id": "F07",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "html-login-page",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": null,
+        "status": 200,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Login with no parameters",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        }
+      },
+      "root_cause": "Legacy silently fell through to the login page when email/password were missing. Migrated redirects to /signin without ?error (nothing was attempted). No token, no cookie.",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "functional_differences": {},
+      "id": "F08",
+      "legacy": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "migrated": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "name": "Login username padded with whitespace is trimmed",
+      "non_functional_differences": {
+        "jwt.signature_len": {
+          "legacy": [
+            171
+          ],
+          "migrated": [
+            342
+          ]
+        }
+      },
+      "status": "PARITY"
+    },
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "html-login-page",
+          "migrated": "empty"
+        },
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": null
+        },
+        "location": {
+          "legacy": null,
+          "migrated": "/signin?error"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 302
+        }
+      },
+      "id": "F09",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "html-login-page",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": null,
+        "status": 200,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin?error",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Password comparison is case-sensitive",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        }
+      },
+      "root_cause": "Password comparison is still case-sensitive (PARISDKH rejected); only the failure transport changed (Post/Redirect/Get, see F05).",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "category": "defect fix",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "error-text-leak",
+          "migrated": "empty"
+        },
+        "location": {
+          "legacy": null,
+          "migrated": "/signin?error"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 302
+        }
+      },
+      "id": "F10",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "error-text-leak",
+        "body_value": null,
+        "content_type": null,
+        "location": null,
+        "status": 200,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin?error",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Username containing a quote (HQL injection probe)",
+      "non_functional_differences": {},
+      "root_cause": "Legacy built HQL by string concatenation (FROM com.schema.User U WHERE U.username='...'), so a quote produced org.hibernate.QueryException and the exception text was returned to the client (injection surface + information leak). Migrated looks the user up by primary key through Spring Data JPA (bound parameter) and treats it as an ordinary failed login.",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "html-login-page",
+          "migrated": "empty"
+        },
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": null
+        },
+        "location": {
+          "legacy": null,
+          "migrated": "/signin?error"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 302
+        }
+      },
+      "id": "F11",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "html-login-page",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": null,
+        "status": 200,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "empty",
+        "body_value": null,
+        "content_type": null,
+        "location": "/signin?error",
+        "status": 302,
+        "token_cookie": null
+      },
+      "name": "Classic injection payload does not bypass auth",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        }
+      },
+      "root_cause": "Injection payload is rejected on both sides (legacy happened to fail the plaintext compare). Migrated uses a bound parameter and the Post/Redirect/Get failure transport (see F05).",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "functional_differences": {},
+      "id": "F12",
+      "legacy": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "pharmacist01"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "pharmacist01"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "migrated": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "pharmacist01"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "pharmacist01"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "name": "Login seeded user pharmacist01",
+      "non_functional_differences": {
+        "jwt.signature_len": {
+          "legacy": [
+            171
+          ],
+          "migrated": [
+            342
+          ]
+        }
+      },
+      "status": "PARITY"
+    },
+    {
+      "functional_differences": {},
+      "id": "F13",
+      "legacy": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "storemgr"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "storemgr"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "migrated": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "storemgr"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "storemgr"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "name": "Login seeded user storemgr",
+      "non_functional_differences": {
+        "jwt.signature_len": {
+          "legacy": [
+            171
+          ],
+          "migrated": [
+            342
+          ]
+        }
+      },
+      "status": "PARITY"
+    },
+    {
+      "functional_differences": {},
+      "id": "F14",
+      "legacy": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "accounts"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "accounts"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "migrated": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "accounts"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "accounts"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "name": "Login seeded user accounts",
+      "non_functional_differences": {
+        "jwt.signature_len": {
+          "legacy": [
+            171
+          ],
+          "migrated": [
+            342
+          ]
+        }
+      },
+      "status": "PARITY"
+    },
+    {
+      "category": "defect fix",
+      "functional_differences": {
+        "body_jwt": {
+          "legacy": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "tarangparikh"
+            },
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          },
+          "migrated": null
+        },
+        "body_kind": {
+          "legacy": "json-jwt-string",
+          "migrated": "json"
+        },
+        "body_value": {
+          "legacy": null,
+          "migrated": {
+            "detail": "Authentication required",
+            "instance": "/token",
+            "status": 401,
+            "title": "Unauthorized",
+            "type": "about:blank"
+          }
+        },
+        "content_type": {
+          "legacy": "application/json",
+          "migrated": "application/problem+json"
+        },
+        "status": {
+          "legacy": 200,
+          "migrated": 401
+        },
+        "token_cookie": {
+          "legacy": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "tarangparikh"
+            },
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          },
+          "migrated": null
+        }
+      },
+      "id": "F15",
+      "legacy": {
+        "body_jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarangparikh"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "body_kind": "json-jwt-string",
+        "body_value": null,
+        "content_type": "application/json",
+        "location": null,
+        "status": 200,
+        "token_cookie": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarangparikh"
+          },
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        }
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "json",
+        "body_value": {
+          "detail": "Authentication required",
+          "instance": "/token",
+          "status": 401,
+          "title": "Unauthorized",
+          "type": "about:blank"
+        },
+        "content_type": "application/problem+json",
+        "location": null,
+        "status": 401,
+        "token_cookie": null
+      },
+      "name": "Unauthenticated GET /token",
+      "non_functional_differences": {
+        "cookie.JSESSIONID": {
+          "legacy": true,
+          "migrated": false
+        },
+        "jwt.signature_len": {
+          "legacy": [
+            171
+          ],
+          "migrated": []
+        }
+      },
+      "root_cause": "Legacy GET /token minted a signed admin JWT for the hard-coded user 'tarangparikh' to any unauthenticated caller (privilege-escalation defect). Migrated /token only re-issues a token for a caller that already presents a valid JWT (cookie or Bearer) and returns RFC 7807 401 otherwise.",
+      "status": "INTENTIONAL DIFFERENCE"
+    },
+    {
+      "category": "modernisation",
+      "functional_differences": {
+        "body_kind": {
+          "legacy": "other",
+          "migrated": "json"
+        },
+        "body_value": {
+          "legacy": null,
+          "migrated": {
+            "detail": "Authentication required",
+            "instance": "/nonexistent",
+            "status": 401,
+            "title": "Unauthorized",
+            "type": "about:blank"
+          }
+        },
+        "content_type": {
+          "legacy": "text/html",
+          "migrated": "application/problem+json"
+        },
+        "status": {
+          "legacy": 404,
+          "migrated": 401
+        }
+      },
+      "id": "F16",
+      "legacy": {
+        "body_jwt": null,
+        "body_kind": "other",
+        "body_value": null,
+        "content_type": "text/html",
+        "location": null,
+        "status": 404,
+        "token_cookie": null
+      },
+      "migrated": {
+        "body_jwt": null,
+        "body_kind": "json",
+        "body_value": {
+          "detail": "Authentication required",
+          "instance": "/nonexistent",
+          "status": 401,
+          "title": "Unauthorized",
+          "type": "about:blank"
+        },
+        "content_type": "application/problem+json",
+        "location": null,
+        "status": 401,
+        "token_cookie": null
+      },
+      "name": "Unknown route returns 404",
+      "non_functional_differences": {},
+      "root_cause": "Spring Security is deny-by-default: unauthenticated requests to any non-public path get 401 before routing, so anonymous callers cannot enumerate routes. An authenticated request to /nonexistent returns 404 (verified by parity/probes.sh), and the nginx front door serves the SPA for unknown browser routes.",
+      "status": "INTENTIONAL DIFFERENCE"
+    }
+  ],
+  "global_differences": {
+    "cookie.JSESSIONID": {
+      "category": "modernisation",
+      "flows": [
+        "F01",
+        "F02",
+        "F05",
+        "F06",
+        "F07",
+        "F09",
+        "F11",
+        "F15"
+      ],
+      "root_cause": "Legacy Tomcat creates an HTTP session (JSESSIONID) on JSP/servlet requests. The migrated API is stateless (SessionCreationPolicy.STATELESS); the only auth state is the JWT 'token' cookie / Bearer header."
+    },
+    "jwt.signature_len": {
+      "category": "modernisation",
+      "flows": [
+        "F03",
+        "F04",
+        "F08",
+        "F12",
+        "F13",
+        "F14",
+        "F15"
+      ],
+      "root_cause": "Legacy signs with the RSA-1024 private key committed to the repo (WEB-INF/StoredObject/system.key; 171-char RS256 signature). Migrated generates a per-environment RSA-2048 key pair at first start (jwt-keys service; 342-char signature). Algorithm (RS256), claims and TTL are unchanged; tokens are not interchangeable between the estates."
+    }
+  },
+  "summary": {
+    "INTENTIONAL DIFFERENCE": 10,
+    "PARITY": 6,
+    "REGRESSION": 0,
+    "total": 16
+  }
+}
