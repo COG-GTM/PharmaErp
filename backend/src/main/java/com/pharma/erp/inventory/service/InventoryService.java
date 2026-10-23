@@ -310,7 +310,8 @@ public class InventoryService {
                 : item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
         Long daysToExpiry = item.getExpiryDate() == null ? null : ChronoUnit.DAYS.between(today, item.getExpiryDate());
         return new InventoryItemResponse(item.getId(), item.getName(), item.getDescription(), item.getBatchNo(),
-                item.getExpiryDate(), daysToExpiry, item.getQuantity(), reorderLevel, item.getUnitPrice(), stockValue,
+                item.getExpiryDate(), daysToExpiry, item.getQuantity(), reorderLevel, item.getReorderLevel(),
+                item.getUnitPrice(), stockValue,
                 item.getGstRate(), item.getHsnCode(), item.getBarcode(), item.getManufacturerId(), item.getStoreId(),
                 names.get(item.getStatusId()),
                 StockStatus.derive(item.getQuantity(), item.getExpiryDate(), reorderLevel, today),

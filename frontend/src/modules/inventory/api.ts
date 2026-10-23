@@ -26,6 +26,8 @@ export interface InventoryItem {
   daysToExpiry?: number | null;
   /** Per-item low-stock level; the backend flags LOW at or below it. */
   reorderLevel?: number;
+  /** Stored per-batch level; null when the batch follows the configured default. */
+  reorderLevelOverride?: number | null;
   stockValue?: number | null;
   status?: string | null;
   stockStatus?: StockStatus;

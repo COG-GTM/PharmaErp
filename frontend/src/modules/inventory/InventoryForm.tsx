@@ -72,6 +72,8 @@ function toUpdateRequest(v: FormValues, loaded: InventoryItem): InventoryItemUpd
   const edited: Partial<InventoryItemRequest> = toRequest(v);
   delete edited.quantity;
   const preserved = Object.fromEntries(PRESERVED_ON_UPDATE.map((k) => [k, loaded[k] ?? null]));
+  // Send the stored override, not the effective level, so batches on the default keep following it.
+  preserved.reorderLevel = loaded.reorderLevelOverride ?? null;
   return { ...preserved, ...edited } as InventoryItemUpdateRequest;
 }
 
@@ -203,13 +205,14 @@ export function InventoryForm() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (id && !loaded) return;
     const clientErrors = validate(values, fields);
     setErrors(clientErrors);
     setError(null);
     if (Object.keys(clientErrors).length) return;
     setSaving(true);
     try {
-      if (id && loaded) await inventoryApi.update(id, toUpdateRequest(values, loaded));
+      if (loaded) await inventoryApi.update(loaded.id, toUpdateRequest(values, loaded));
       else await inventoryApi.create(toRequest(values));
       navigate('..');
     } catch (err) {
@@ -230,7 +233,7 @@ export function InventoryForm() {
       )}
       {loading ? (
         <p>Loading item…</p>
-      ) : (
+      ) : id && !loaded ? null : (
         <form onSubmit={onSubmit} noValidate aria-label={id ? 'Edit inventory item' : 'New inventory item'}>
           <div className="form-grid">
             <SpecFields specs={fields} values={values} errors={errors} onChange={set} />

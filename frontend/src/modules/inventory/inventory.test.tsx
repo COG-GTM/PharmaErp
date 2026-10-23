@@ -185,6 +185,7 @@ describe('inventory module', () => {
     const stored: InventoryItem = {
       ...low,
       reorderLevel: 50,
+      reorderLevelOverride: 50,
       status: 'ARRIVED',
       employeeId: 7,
       clientId: 9,
@@ -225,6 +226,32 @@ describe('inventory module', () => {
       },
     });
     expect(put?.body).not.toHaveProperty('quantity');
+  });
+
+  it('keeps a batch on the default reorder level when editing', async () => {
+    const inherited: InventoryItem = { ...low, reorderLevel: 10, reorderLevelOverride: null };
+    const { calls } = mockApi(({ method, url }) => {
+      if (method === 'PUT') return { body: inherited };
+      if (url === '/api/inventory/3') return { body: inherited };
+      return { body: page([]) };
+    });
+    renderAt('/inventory/3/edit');
+
+    await screen.findByDisplayValue('Insulin pen');
+    await userEvent.click(screen.getByRole('button', { name: 'Save item' }));
+    await screen.findByRole('heading', { name: 'Inventory' });
+    expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({ reorderLevel: null });
+  });
+
+  it('does not create a new item when the item being edited fails to load', async () => {
+    const { calls } = mockApi(({ url }) =>
+      url === '/api/inventory/3' ? { status: 404, body: { status: 404, title: 'Not Found' } } : { body: page([]) },
+    );
+    renderAt('/inventory/3/edit');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Record not found.');
+    expect(screen.queryByRole('button', { name: 'Save item' })).not.toBeInTheDocument();
+    expect(calls.filter((c) => c.method !== 'GET')).toHaveLength(0);
   });
 
   it('records a stock adjustment instead of editing quantity', async () => {

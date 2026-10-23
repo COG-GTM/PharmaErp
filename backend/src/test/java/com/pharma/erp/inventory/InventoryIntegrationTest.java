@@ -274,6 +274,13 @@ class InventoryIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content[*].id", not(hasItem(plenty))))
                 .andExpect(jsonPath("$.content[*].id", not(hasItem(expiredLow))));
 
+        mockMvc.perform(get("/api/inventory/" + belowOwnLevel).with(bearer(USER)))
+                .andExpect(jsonPath("$.reorderLevel").value(20))
+                .andExpect(jsonPath("$.reorderLevelOverride").value(20));
+        mockMvc.perform(get("/api/inventory/" + empty).with(bearer(USER)))
+                .andExpect(jsonPath("$.reorderLevel").isNumber())
+                .andExpect(jsonPath("$.reorderLevelOverride").doesNotExist());
+
         mockMvc.perform(get("/api/inventory/low-stock").param("q", barcode).with(bearer(USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
