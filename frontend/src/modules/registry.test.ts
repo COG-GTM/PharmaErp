@@ -25,4 +25,10 @@ describe('module registry', () => {
       collectModules({ './a/index.ts': def({ id: 'a' }), './b/index.ts': def({ id: 'b' }) }),
     ).toThrow(/Duplicate module route path/);
   });
+
+  it('rejects duplicate module ids', () => {
+    expect(() =>
+      collectModules({ './a/index.ts': def({ path: 'a' }), './b/index.ts': def({ path: 'b' }) }),
+    ).toThrow(/Duplicate module id/);
+  });
 });

@@ -9,10 +9,13 @@ export function collectModules(files: Record<string, ModuleFile>): ModuleDefinit
     }
     return mod.default;
   });
-  const seen = new Set<string>();
+  const ids = new Set<string>();
+  const paths = new Set<string>();
   for (const m of modules) {
-    if (seen.has(m.path)) throw new Error(`Duplicate module route path "${m.path}"`);
-    seen.add(m.path);
+    if (ids.has(m.id)) throw new Error(`Duplicate module id "${m.id}"`);
+    if (paths.has(m.path)) throw new Error(`Duplicate module route path "${m.path}"`);
+    ids.add(m.id);
+    paths.add(m.path);
   }
   return modules.sort((a, b) => (a.order ?? 100) - (b.order ?? 100) || a.navLabel.localeCompare(b.navLabel));
 }
