@@ -23,10 +23,11 @@ describe('App shell', () => {
     expect(await screen.findByTestId('health-status')).toHaveTextContent('UP');
   });
 
-  it('guards modules that require auth', () => {
+  it('redirects to the sign-in screen for modules that require auth', () => {
     renderWithProviders(<App modules={[secured]} />, { route: '/secured' });
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Sign in required');
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email:')).toBeInTheDocument();
     expect(screen.queryByText('secret content')).not.toBeInTheDocument();
   });
 
@@ -36,5 +37,21 @@ describe('App shell', () => {
     renderWithProviders(<App modules={[secured]} />, { route: '/secured' });
 
     expect(screen.getByText('secret content')).toBeInTheDocument();
+  });
+
+  it('lands on the dashboard after sign-in by default', async () => {
+    setToken('t');
+    mockFetchJson({ totalElements: 0, content: [] });
+
+    renderWithProviders(<App />, { route: '/' });
+
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(await screen.findByText(/Last updated/)).toBeInTheDocument();
+  });
+
+  it('shows a not-found page for unknown routes', () => {
+    renderWithProviders(<App modules={[secured]} />, { route: '/nope' });
+
+    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
   });
 });
