@@ -88,7 +88,9 @@ def main():
         if fid not in expected or missing:
             name = (legacy.get(fid) or migrated.get(fid))["name"] if not len(missing) == 2 else fid
             reason = "not in flows.json" if fid not in expected else f"missing from {' and '.join(missing)} run"
-            flows.append({"id": fid, "name": name, "status": "REGRESSION", "reason": reason})
+            flows.append({"id": fid, "name": name, "status": "REGRESSION", "reason": reason,
+                          "legacy": functional(legacy[fid]) if fid in legacy else None,
+                          "migrated": functional(migrated[fid]) if fid in migrated else None})
             continue
         flows.append(classify(fid, legacy[fid], migrated[fid], known))
     globals_seen = {}
