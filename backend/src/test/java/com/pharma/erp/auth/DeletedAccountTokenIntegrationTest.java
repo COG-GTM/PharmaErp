@@ -49,6 +49,15 @@ class DeletedAccountTokenIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void accountsThatPredateTheCreatedAtColumnKeepTheirTokens() throws Exception {
+        String username = "legacy_" + UUID.randomUUID().toString().substring(0, 8);
+        jdbc.update("INSERT INTO `user` (`username`, `password`, `created_at`) VALUES (?, ?, '2000-01-01 00:00:00')",
+                username, "Secret#123");
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + tokenFor(username)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void tokenForUnknownAccountIsRejected() throws Exception {
         mockMvc.perform(get("/api/auth/me").with(bearer("never_existed_" + UUID.randomUUID())))
                 .andExpect(status().isUnauthorized());
