@@ -63,4 +63,15 @@ class JwtAuthenticationFilterTest {
         filter.doFilter(request, new MockHttpServletResponse(), chain);
         return seen[0];
     }
+
+    @Test
+    void ignoresTokenRejectedByAccountChecker() throws Exception {
+        JwtAuthenticationFilter checked = new JwtAuthenticationFilter(jwtService, username -> !"gone".equals(username));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + jwtService.issueToken("gone", "admin"));
+
+        checked.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
 }
