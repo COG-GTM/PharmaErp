@@ -32,6 +32,8 @@ glob_nf = sorted({k for r in rows for k in r.get("non_functional_differences", {
 
 
 def request(f):
+    if f is None:
+        return "(not in flows.json)"
     s = f'{f.get("method", "GET")} {f.get("path", "")}'
     if f.get("params"):
         s += " " + " ".join(f"{k}={v!r}" for k, v in f["params"].items())
@@ -41,6 +43,8 @@ def request(f):
 
 
 def outcome(r):
+    if r is None:
+        return "not captured"
     parts = [str(r["status"])]
     if r.get("location"):
         parts.append(f'→ {r["location"]}')
@@ -65,20 +69,20 @@ def img(name):
 
 
 flow_rows = "".join(
-    f'<tr><td class="m">{e(r["id"])}</td><td>{e(r["name"])}<div class="sub m">{e(request(flows[r["id"]]))}</div></td>'
-    f'<td class="m">{e(outcome(r["legacy"]))}</td><td class="m">{e(outcome(r["migrated"]))}</td>'
+    f'<tr><td class="m">{e(r["id"])}</td><td>{e(r["name"])}<div class="sub m">{e(request(flows.get(r["id"])))}</div></td>'
+    f'<td class="m">{e(outcome(r.get("legacy")))}</td><td class="m">{e(outcome(r.get("migrated")))}</td>'
     f'<td>{badge(r["status"])}{"<div class=sub>" + e(r["category"]) + "</div>" if r.get("category") else ""}</td></tr>'
     for r in rows)
 
 diff_items = "".join(
-    f'<div class="card"><h4><span class="m">{e(r["id"])}</span> {e(r["name"])} <span class="sub">({e(r["category"])})</span></h4>'
+    f'<div class="card"><h4><span class="m">{e(r["id"])}</span> {e(r["name"])} <span class="sub">({e(r.get("category") or r["status"])})</span></h4>'
     f'<table class="mini"><tr><th>Field</th><th>Legacy</th><th>Migrated</th></tr>'
     + "".join(f'<tr><td class="m">{e(k)}</td><td class="m">{e(json.dumps(v["legacy"]))}</td><td class="m">{e(json.dumps(v["migrated"]))}</td></tr>'
-              for k, v in sorted(r["functional_differences"].items()))
-    + f'</table><p><b>Root cause.</b> {e(r["root_cause"])}</p></div>'
+              for k, v in sorted(r.get("functional_differences", {}).items()))
+    + f'</table><p><b>{"Root cause" if r.get("root_cause") else "Regression"}.</b> {e(r.get("root_cause") or r.get("reason"))}</p></div>'
     for r in rows if r["status"] != "PARITY")
 
-regress_items = "".join(f'<li><b>{e(r["id"])}</b> {e(r["name"])}: {e(json.dumps(r["functional_differences"]))}</li>'
+regress_items = "".join(f'<li><b>{e(r["id"])}</b> {e(r["name"])}: {e(r.get("reason") or "")} {e(json.dumps(r.get("functional_differences", {})))}</li>'
                         for r in rows if r["status"] == "REGRESSION") or "<li>None observed.</li>"
 
 global_items = "".join(f'<li><b class="m">{e(k)}</b> ({e(known["global"][k]["category"])}): {e(known["global"][k]["root_cause"])}</li>'
