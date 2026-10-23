@@ -20,7 +20,7 @@ final class PaymentsTestData {
 
     static int insertInvoice(JdbcTemplate jdbc, Integer clientId) {
         return insert(jdbc, "INSERT INTO invoice (invoice_number, client_id, invoice_date, total_amount) VALUES ('"
-                + unique("INV") + "', " + clientId + ", CURRENT_DATE, 500.00)");
+                + unique("INV") + "', " + clientId + ", CURRENT_DATE, 5000.00)");
     }
 
     private static int insert(JdbcTemplate jdbc, String sql) {

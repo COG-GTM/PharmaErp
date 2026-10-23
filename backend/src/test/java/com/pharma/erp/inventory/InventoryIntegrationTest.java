@@ -403,7 +403,8 @@ class InventoryIntegrationTest extends AbstractIntegrationTest {
 
     private int insertStore() {
         String name = "Inventory IT store " + UUID.randomUUID();
-        jdbc.update("INSERT INTO store (store_name, store_location) VALUES (?, 'Ahmedabad')", name);
+        String code = "INV-" + UUID.randomUUID().toString().substring(0, 8);
+        jdbc.update("INSERT INTO store (store_code, store_name, store_location) VALUES (?, ?, 'Ahmedabad')", code, name);
         return jdbc.queryForObject("SELECT store_id FROM store WHERE store_name = ?", Integer.class, name);
     }
 
