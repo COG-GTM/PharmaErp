@@ -1,0 +1,488 @@
+{
+  "base": "http://127.0.0.1:8081",
+  "flows": [
+    {
+      "body": {
+        "kind": "empty"
+      },
+      "content_type": "text/html",
+      "cookies": {
+        "JSESSIONID": "present"
+      },
+      "id": "F01",
+      "location": "/redirect",
+      "name": "Root redirects to login page",
+      "request": {
+        "method": "GET",
+        "path": "/"
+      },
+      "status": 302
+    },
+    {
+      "body": {
+        "has_login_form": true,
+        "kind": "html-login-page"
+      },
+      "content_type": "text/html",
+      "cookies": {
+        "JSESSIONID": "present"
+      },
+      "id": "F02",
+      "location": null,
+      "name": "Login page renders",
+      "request": {
+        "method": "GET",
+        "path": "/redirect"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "signature_len": 171,
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "kind": "json-jwt-string"
+      },
+      "content_type": "application/json",
+      "cookies": {
+        "token": {
+          "jwt": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "tarang"
+            },
+            "signature_len": 171,
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          }
+        }
+      },
+      "id": "F03",
+      "location": null,
+      "name": "Login success (form POST) returns JWT body + token cookie",
+      "request": {
+        "form": {
+          "email": "tarang",
+          "password": "parisdkh"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "signature_len": 171,
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "kind": "json-jwt-string"
+      },
+      "content_type": "application/json",
+      "cookies": {
+        "token": {
+          "jwt": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "tarang"
+            },
+            "signature_len": 171,
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          }
+        }
+      },
+      "id": "F04",
+      "location": null,
+      "name": "Login success via GET query string",
+      "request": {
+        "form": {
+          "email": "tarang",
+          "password": "parisdkh"
+        },
+        "method": "GET",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "has_login_form": true,
+        "kind": "html-login-page"
+      },
+      "content_type": "text/html",
+      "cookies": {
+        "JSESSIONID": "present"
+      },
+      "id": "F05",
+      "location": null,
+      "name": "Login wrong password",
+      "request": {
+        "form": {
+          "email": "tarang",
+          "password": "wrongpass"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "has_login_form": true,
+        "kind": "html-login-page"
+      },
+      "content_type": "text/html",
+      "cookies": {
+        "JSESSIONID": "present"
+      },
+      "id": "F06",
+      "location": null,
+      "name": "Login unknown user",
+      "request": {
+        "form": {
+          "email": "nobody",
+          "password": "whatever1"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "has_login_form": true,
+        "kind": "html-login-page"
+      },
+      "content_type": "text/html",
+      "cookies": {
+        "JSESSIONID": "present"
+      },
+      "id": "F07",
+      "location": null,
+      "name": "Login with no parameters",
+      "request": {
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarang"
+          },
+          "signature_len": 171,
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "kind": "json-jwt-string"
+      },
+      "content_type": "application/json",
+      "cookies": {
+        "token": {
+          "jwt": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "tarang"
+            },
+            "signature_len": 171,
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          }
+        }
+      },
+      "id": "F08",
+      "location": null,
+      "name": "Login username padded with whitespace is trimmed",
+      "request": {
+        "form": {
+          "email": "  tarang  ",
+          "password": "parisdkh"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "has_login_form": true,
+        "kind": "html-login-page"
+      },
+      "content_type": "text/html",
+      "cookies": {
+        "JSESSIONID": "present"
+      },
+      "id": "F09",
+      "location": null,
+      "name": "Password comparison is case-sensitive",
+      "request": {
+        "form": {
+          "email": "tarang",
+          "password": "PARISDKH"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "kind": "error-text-leak",
+        "text": "java.lang.IllegalArgumentException: org.hibernate.QueryException: expecting ''', found '<EOF>' [FROM com.schema.User U WHERE U.username='x'']"
+      },
+      "content_type": "",
+      "cookies": {},
+      "id": "F10",
+      "location": null,
+      "name": "Username containing a quote (HQL injection probe)",
+      "request": {
+        "form": {
+          "email": "x'",
+          "password": "y"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "has_login_form": true,
+        "kind": "html-login-page"
+      },
+      "content_type": "text/html",
+      "cookies": {
+        "JSESSIONID": "present"
+      },
+      "id": "F11",
+      "location": null,
+      "name": "Classic injection payload does not bypass auth",
+      "request": {
+        "form": {
+          "email": "tarang' OR '1'='1",
+          "password": "anything"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "pharmacist01"
+          },
+          "signature_len": 171,
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "kind": "json-jwt-string"
+      },
+      "content_type": "application/json",
+      "cookies": {
+        "token": {
+          "jwt": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "pharmacist01"
+            },
+            "signature_len": 171,
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          }
+        }
+      },
+      "id": "F12",
+      "location": null,
+      "name": "Login seeded user pharmacist01",
+      "request": {
+        "form": {
+          "email": "pharmacist01",
+          "password": "Secure#2024"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "storemgr"
+          },
+          "signature_len": 171,
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "kind": "json-jwt-string"
+      },
+      "content_type": "application/json",
+      "cookies": {
+        "token": {
+          "jwt": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "storemgr"
+            },
+            "signature_len": 171,
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          }
+        }
+      },
+      "id": "F13",
+      "location": null,
+      "name": "Login seeded user storemgr",
+      "request": {
+        "form": {
+          "email": "storemgr",
+          "password": "warehouse88"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "accounts"
+          },
+          "signature_len": 171,
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "kind": "json-jwt-string"
+      },
+      "content_type": "application/json",
+      "cookies": {
+        "token": {
+          "jwt": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "accounts"
+            },
+            "signature_len": 171,
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          }
+        }
+      },
+      "id": "F14",
+      "location": null,
+      "name": "Login seeded user accounts",
+      "request": {
+        "form": {
+          "email": "accounts",
+          "password": "ledger2024"
+        },
+        "method": "POST",
+        "path": "/login"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "jwt": {
+          "alg": "RS256",
+          "claims": {
+            "scope": "admin",
+            "sub": "user/login",
+            "username": "tarangparikh"
+          },
+          "signature_len": 171,
+          "ttl_seconds_approx": 3600,
+          "valid_shape": true
+        },
+        "kind": "json-jwt-string"
+      },
+      "content_type": "application/json",
+      "cookies": {
+        "JSESSIONID": "present",
+        "token": {
+          "jwt": {
+            "alg": "RS256",
+            "claims": {
+              "scope": "admin",
+              "sub": "user/login",
+              "username": "tarangparikh"
+            },
+            "signature_len": 171,
+            "ttl_seconds_approx": 3600,
+            "valid_shape": true
+          }
+        }
+      },
+      "id": "F15",
+      "location": null,
+      "name": "Unauthenticated GET /token",
+      "request": {
+        "method": "GET",
+        "path": "/token"
+      },
+      "status": 200
+    },
+    {
+      "body": {
+        "kind": "other",
+        "text": "<!doctype html><html lang=\"en\"><head><title>HTTP Status 404 \u2013 Not Found</title><style type=\"text/css\">body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} "
+      },
+      "content_type": "text/html",
+      "cookies": {},
+      "id": "F16",
+      "location": null,
+      "name": "Unknown route returns 404",
+      "request": {
+        "method": "GET",
+        "path": "/nonexistent"
+      },
+      "status": 404
+    }
+  ],
+  "label": "legacy"
+}

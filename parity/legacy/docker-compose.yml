@@ -1,0 +1,25 @@
+# Legacy estate: unchanged servlet/Hibernate WAR on Tomcat 9 + Java 8, MySQL 5.7.
+# Run from repo root:  docker compose -f parity/legacy/docker-compose.yml up -d --build
+name: pharmaerp-legacy
+services:
+  legacy-db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: PHARMA_ERP
+    ports: ["127.0.0.1:3307:3306"]
+    volumes:
+      - ../seed/legacy-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../seed/seed-users.sql:/docker-entrypoint-initdb.d/02-seed-users.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  legacy-app:
+    build:
+      context: ../..
+      dockerfile: parity/legacy/Dockerfile
+    ports: ["127.0.0.1:8081:8080"]
+    depends_on:
+      legacy-db: {condition: service_healthy}
