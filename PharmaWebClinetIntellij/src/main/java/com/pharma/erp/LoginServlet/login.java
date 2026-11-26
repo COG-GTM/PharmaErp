@@ -26,7 +26,6 @@ import org.hibernate.SessionFactory;
 @WebServlet(name = "login",urlPatterns = {"/login"})
 public class login extends HttpServlet {
     protected void doProcess(HttpServletRequest request,HttpServletResponse response) throws IOException {
-            synchronized (getServletContext()){
                 SessionFactory _user_factory = (SessionFactory) getServletContext().getAttribute("User_Factory");
                 Session _session = _user_factory.getCurrentSession();
 
@@ -93,7 +92,6 @@ public class login extends HttpServlet {
 
 
 
-            }
     }
 
 
