@@ -12,6 +12,7 @@ import java.security.Key;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.util.Date;
+import java.util.concurrent.Semaphore;
 
 
 import com.google.gson.Gson;
@@ -25,7 +26,20 @@ import org.hibernate.SessionFactory;
 
 @WebServlet(name = "login",urlPatterns = {"/login"})
 public class login extends HttpServlet {
+    // Hibernate's built-in pool throws instead of waiting when every connection is in use,
+    // so logins queue here for one of pool_size permits.
+    private Semaphore _connection_permits;
+
+    @Override
+    public void init() throws ServletException {
+        SessionFactory _user_factory = (SessionFactory) getServletContext().getAttribute("User_Factory");
+        Object _pool_size = _user_factory.getProperties().get("hibernate.connection.pool_size");
+        _connection_permits = new Semaphore(_pool_size == null ? 1 : Integer.parseInt(_pool_size.toString()), true);
+    }
+
     protected void doProcess(HttpServletRequest request,HttpServletResponse response) throws IOException {
+            _connection_permits.acquireUninterruptibly();
+            try{
                 SessionFactory _user_factory = (SessionFactory) getServletContext().getAttribute("User_Factory");
                 Session _session = _user_factory.getCurrentSession();
 
@@ -92,6 +106,9 @@ public class login extends HttpServlet {
 
 
 
+            }finally{
+                _connection_permits.release();
+            }
     }
 
 
